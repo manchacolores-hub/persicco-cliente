@@ -11,7 +11,7 @@
   a{color:inherit;text-decoration:none}
 
   /* ── Topbar ── */
-  .topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:#18181c;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+  .topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;background:#18181c;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
   .topbar-logo{height:54px;border-radius:12px;box-shadow:0 2px 16px rgba(234,179,8,.2)}
   .topbar-title{font-size:19px;font-weight:900;letter-spacing:-.3px}
   .topbar-sub{font-size:12px;color:#78788a;margin-top:2px}
@@ -20,8 +20,30 @@
   .upd-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-  /* ── Grid ── */
-  .main{padding:24px 20px;max-width:1300px;margin:0 auto}
+  /* ── Layout: sidebar + detail ── */
+  .layout{display:flex;max-width:1400px;margin:0 auto;align-items:flex-start}
+  .sidebar{width:290px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.07);padding:16px 10px 40px;position:sticky;top:83px;height:calc(100vh - 83px);overflow-y:auto}
+  .sidebar-summary{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding:0 6px}
+  .mini-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;display:inline-flex;align-items:center;gap:3px}
+  .mini-chip.warn{background:rgba(248,113,113,.12);color:#f87171}
+  .mini-chip.ok{background:rgba(34,197,94,.12);color:#4ade80}
+  .mini-chip.neu{background:rgba(120,120,138,.12);color:#a0a0b0}
+
+  .suc-item{display:flex;align-items:center;gap:8px;padding:10px 10px;border-radius:10px;cursor:pointer;margin-bottom:3px;transition:.15s;border:1px solid transparent}
+  .suc-item:hover{background:rgba(255,255,255,.04)}
+  .suc-item.active{background:rgba(99,102,241,.14);border-color:rgba(99,102,241,.3)}
+  .suc-item .li-name{font-weight:700;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .suc-item.overview-item .li-name{font-weight:800}
+  .li-badge{background:rgba(248,113,113,.15);color:#f87171;font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;flex-shrink:0}
+  .li-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .li-dot.ok{background:#4ade80}
+  .li-dot.gray{background:#4a4a58}
+  .closed-tag{font-size:8.5px;font-weight:800;background:rgba(234,179,8,.15);color:#fbbf24;padding:1px 5px;border-radius:5px;flex-shrink:0}
+  .sidebar-divider{height:1px;background:rgba(255,255,255,.07);margin:10px 6px 12px}
+
+  .detail{flex:1;min-width:0;padding:24px 24px 60px}
+
+  /* ── Summary cards (overview) ── */
   .summary-bar{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
   .sum-card{background:#18181c;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 20px;flex:1;min-width:140px}
   .sum-card .num{font-size:28px;font-weight:900;line-height:1}
@@ -29,10 +51,10 @@
   .sum-card.warn .num{color:#f87171}
   .sum-card.ok .num{color:#4ade80}
 
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 
-  /* ── Cards ── */
-  .card{background:#18181c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:11px;transition:.2s}
+  /* ── Cards (overview grid) ── */
+  .card{background:#18181c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:11px;transition:.2s;cursor:pointer}
   .card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
   .card.all-ok{border-color:rgba(34,197,94,.15)}
   .card.has-falt{border-color:rgba(248,113,113,.15)}
@@ -63,9 +85,45 @@
   .falt-item{font-size:12px;color:#f87171;padding:3px 0;border-bottom:1px solid rgba(248,113,113,.07)}
   .falt-item:last-child{border:none}
   .ok-line{font-size:12px;color:#4ade80;padding:3px 0;display:flex;align-items:center;gap:5px}
+  .ok-line2{font-size:12px;color:#a0a0b0;padding:2px 0}
 
   /* Banner cerrada */
   .cerr-banner{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:10px 14px;color:#fbbf24;font-size:12px;display:flex;align-items:center;gap:8px}
+
+  /* ── Detail view (single sucursal) ── */
+  .detail-head{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px}
+  .detail-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+  .detail-icon.ok{background:rgba(34,197,94,.12)}
+  .detail-icon.falt{background:rgba(248,113,113,.1)}
+  .detail-icon.cerr{background:rgba(234,179,8,.1)}
+  .detail-icon.nd{background:rgba(120,120,138,.1)}
+  .detail-name{font-size:22px;font-weight:900}
+  .detail-addr{font-size:13px;color:#78788a;margin-top:3px}
+
+  .detail-block{background:#18181c;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px;margin-bottom:16px}
+  .detail-block-title{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .detail-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .d-col{min-width:0}
+  .d-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#78788a;margin-bottom:8px}
+  .d-title.bad{color:#f87171}
+  .ulist{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow-y:auto;padding-right:4px}
+  .ulist .it{font-size:12.5px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .ulist .it:last-child{border:none}
+  .ulist .it.miss{color:#f87171}
+  .ulist.empty-note{color:#4a4a58;font-style:italic;font-size:12px}
+
+  /* Back button */
+  .back-btn{display:inline-flex;align-items:center;gap:6px;background:#18181c;border:1px solid rgba(255,255,255,.08);color:#a0a0b0;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;cursor:pointer;margin-bottom:16px}
+  .back-btn:hover{border-color:rgba(255,255,255,.2);color:#f0f0f3}
+
+  /* ── Historial ── */
+  .hist-dates-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .hist-date-btn{background:#0e0e10;border:1px solid rgba(255,255,255,.08);color:#a0a0b0;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:8px;cursor:pointer;transition:.15s}
+  .hist-date-btn:hover{border-color:rgba(255,255,255,.2);color:#f0f0f3}
+  .hist-date-btn.active{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.4);color:#c7c9ff}
+  .hist-meta{font-size:11.5px;color:#78788a;margin-bottom:12px}
+  .hist-empty{color:#4a4a58;font-style:italic;font-size:12.5px;padding:6px 0}
+  .hist-cerrada-banner{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:10px 14px;color:#fbbf24;font-size:12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:14px}
 
   /* Loading / error */
   .status-msg{text-align:center;padding:80px 20px;color:#4a4a58;font-size:14px}
@@ -78,10 +136,12 @@
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
 
   /* Mobile */
-  @media(max-width:600px){
+  @media(max-width:780px){
     .topbar{padding:12px 16px}
-    .main{padding:16px 12px}
-    .summary-bar{gap:10px}
+    .layout{flex-direction:column}
+    .sidebar{width:100%;height:auto;position:static;border-right:none;border-bottom:1px solid rgba(255,255,255,.07);padding:12px 12px 14px;max-height:none}
+    .detail{padding:18px 14px 40px}
+    .detail-cols{grid-template-columns:1fr}
   }
 </style>
 </head>
@@ -99,13 +159,18 @@
   </div>
 </div>
 
-<div class="main">
-  <div class="summary-bar" id="summaryBar"></div>
-  <div class="grid" id="grid">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-summary" id="sidebarSummary"></div>
+    <div id="sucList">
+      <div class="status-msg" style="padding:30px 10px"><div class="loader"></div></div>
+    </div>
+  </aside>
+  <main class="detail" id="detail">
     <div class="status-msg">
       <div class="loader"></div><br>Cargando datos...
     </div>
-  </div>
+  </main>
 </div>
 
 <script>
@@ -116,9 +181,13 @@
 const GIST_RAW_URL = 'https://gist.githubusercontent.com/manchacolores-hub/dcc09a47ba636bcd063145303784d55e/raw/persicco_resultados.json';
 // ══════════════════════════════════════════════════════════════
 
+let DATA = null;
+let selectedNombre = '__overview__';
+let histSelIdx = {}; // nombre -> índice seleccionado en su historial
+
 async function loadData(){
   if(GIST_RAW_URL === 'REEMPLAZAR_CON_URL_DEL_GIST'){
-    document.getElementById('grid').innerHTML =
+    document.getElementById('detail').innerHTML =
       '<div class="status-msg">⚙️ Falta configurar la URL del Gist en index.html<br><small>Seguí las instrucciones de setup.</small></div>';
     return;
   }
@@ -127,80 +196,123 @@ async function loadData(){
     const r = await fetch(GIST_RAW_URL + '?t=' + Date.now());
     if(!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
-    render(data);
+    DATA = data;
+    if(data.updated_at){
+      const d = new Date(data.updated_at);
+      document.getElementById('updTime').textContent =
+        'Actualizado: ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    }
+    renderSidebar();
+    renderDetail();
   } catch(e){
-    document.getElementById('grid').innerHTML =
+    document.getElementById('detail').innerHTML =
       '<div class="status-msg">❌ No se pudieron cargar los datos.<br><small>'+e.message+'</small></div>';
   }
 }
 
-function render(data){
-  // Fecha actualización
-  if(data.updated_at){
-    const d = new Date(data.updated_at);
-    document.getElementById('updTime').textContent =
-      'Actualizado: ' + d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  }
+function missCount(s){
+  return (s.miss_sabores||[]).length + (s.miss_guapaletas||[]).length + (s.miss_helados||[]).length;
+}
 
-  const sucs = data.sucursales || [];
+function statusOf(s){
+  if(s.sin_datos) return {iconClass:'nd', emoji:'–', tagHtml:'<span class="tag nd">Sin datos</span>'};
+  if(s.cerrada)   return {iconClass:'cerr', emoji:'🔒', tagHtml:'<span class="tag cerr">Cerrada</span>'};
+  const m = missCount(s);
+  if(m>0) return {iconClass:'falt', emoji:'!', tagHtml:'<span class="tag falt">'+m+' faltantes</span>'};
+  return {iconClass:'ok', emoji:'✓', tagHtml:'<span class="tag ok">✓ Completa</span>'};
+}
 
-  // Summary bar
-  const totalFalt = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&(s.miss_sabores.length+s.miss_guapaletas.length+s.miss_helados.length)>0).length;
-  const totalOk   = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&(s.miss_sabores.length+s.miss_guapaletas.length+s.miss_helados.length)===0).length;
+function selectSuc(nombre){
+  selectedNombre = nombre;
+  renderSidebar();
+  renderDetail();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderSidebar(){
+  if(!DATA) return;
+  const sucs = DATA.sucursales || [];
+  const totalFalt = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = sucs.filter(s=>s.cerrada).length;
-  document.getElementById('summaryBar').innerHTML = `
-    <div class="sum-card ${totalFalt>0?'warn':'ok'}">
-      <div class="num">${totalFalt>0?totalFalt:'0'}</div>
-      <div class="lbl">${totalFalt>0?'Con faltantes':'Con faltantes'}</div>
-    </div>
-    <div class="sum-card ok">
-      <div class="num">${totalOk}</div>
-      <div class="lbl">Completas</div>
-    </div>
-    <div class="sum-card">
-      <div class="num" style="color:#fbbf24">${totalCerr}</div>
-      <div class="lbl">Cerradas</div>
-    </div>
-    <div class="sum-card">
-      <div class="num" style="color:#a78bfa">${sucs.length}</div>
-      <div class="lbl">Sucursales</div>
-    </div>
-  `;
 
-  // Cards
-  const grid = document.getElementById('grid');
-  grid.innerHTML = '';
+  document.getElementById('sidebarSummary').innerHTML =
+    (totalFalt>0?'<span class="mini-chip warn">'+totalFalt+' con faltantes</span>':'')
+    +'<span class="mini-chip ok">'+totalOk+' completas</span>'
+    +(totalCerr>0?'<span class="mini-chip neu">'+totalCerr+' cerradas</span>':'');
+
+  const list = document.getElementById('sucList');
+  list.innerHTML = '';
+
+  const ov = document.createElement('div');
+  ov.className = 'suc-item overview-item' + (selectedNombre==='__overview__' ? ' active' : '');
+  ov.onclick = function(){ selectSuc('__overview__'); };
+  ov.innerHTML = '<span class="li-name">📊 Resumen general</span>';
+  list.appendChild(ov);
+
+  const div = document.createElement('div');
+  div.className = 'sidebar-divider';
+  list.appendChild(div);
+
   sucs.forEach(s=>{
-    const miss = (s.miss_sabores||[]).length + (s.miss_guapaletas||[]).length + (s.miss_helados||[]).length;
-    let cardClass = 'card';
-    let iconClass = 'ok', iconEmoji = '✓';
-    let tagHtml = '';
+    const st = statusOf(s);
+    const m = missCount(s);
+    const it = document.createElement('div');
+    it.className = 'suc-item' + (s.nombre===selectedNombre ? ' active' : '');
+    it.onclick = function(){ selectSuc(s.nombre); };
+    let right = '';
+    if(s.sin_datos) right = '<span class="li-dot gray" title="Sin datos"></span>';
+    else if(s.cerrada) right = '<span class="closed-tag">CERRADO</span>';
+    else if(m===0) right = '<span class="li-dot ok" title="Todo disponible"></span>';
+    else right = '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
+    it.innerHTML = '<span class="li-name">'+s.nombre+'</span>'+right;
+    list.appendChild(it);
+  });
+}
 
-    if(s.sin_datos){
-      cardClass += ' sin-datos';
-      iconClass = 'nd'; iconEmoji = '–';
-      tagHtml = '<span class="tag nd">Sin datos</span>';
-    } else if(s.cerrada){
-      cardClass += ' cerrada';
-      iconClass = 'cerr'; iconEmoji = '🔒';
-      tagHtml = '<span class="tag cerr">Cerrada</span>';
-    } else if(miss > 0){
-      cardClass += ' has-falt';
-      iconClass = 'falt'; iconEmoji = '!';
-      tagHtml = '<span class="tag falt">'+miss+' faltantes</span>';
-    } else {
-      cardClass += ' all-ok';
-      tagHtml = '<span class="tag ok">✓ Completa</span>';
-    }
+function ulist(items, cls){
+  if(!items || !items.length) return '<div class="ulist empty-note">— ninguno —</div>';
+  return '<div class="ulist">' + items.map(n=>'<div class="it'+(cls?(' '+cls):'')+'">'+n+'</div>').join('') + '</div>';
+}
+
+function renderDetail(){
+  if(!DATA) return;
+  if(selectedNombre === '__overview__'){
+    renderOverview();
+  } else {
+    const s = (DATA.sucursales||[]).find(x=>x.nombre===selectedNombre);
+    if(!s){ renderOverview(); return; }
+    renderSucDetail(s);
+  }
+}
+
+function renderOverview(){
+  const sucs = DATA.sucursales || [];
+  const totalFalt = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
+  const totalCerr = sucs.filter(s=>s.cerrada).length;
+
+  let html = '<div class="summary-bar">'
+    + '<div class="sum-card '+(totalFalt>0?'warn':'ok')+'"><div class="num">'+totalFalt+'</div><div class="lbl">Con faltantes</div></div>'
+    + '<div class="sum-card ok"><div class="num">'+totalOk+'</div><div class="lbl">Completas</div></div>'
+    + '<div class="sum-card"><div class="num" style="color:#fbbf24">'+totalCerr+'</div><div class="lbl">Cerradas</div></div>'
+    + '<div class="sum-card"><div class="num" style="color:#a78bfa">'+sucs.length+'</div><div class="lbl">Sucursales</div></div>'
+    + '</div>';
+
+  html += '<div class="grid">';
+  sucs.forEach(s=>{
+    const st = statusOf(s);
+    let cardClass = 'card';
+    if(s.sin_datos) cardClass += ' sin-datos';
+    else if(s.cerrada) cardClass += ' cerrada';
+    else if(missCount(s)>0) cardClass += ' has-falt';
+    else cardClass += ' all-ok';
 
     let body = '';
     if(s.cerrada){
       body = '<div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div>';
     } else if(!s.sin_datos){
-      // Helado x Kilo
-      body += `<div>
-        <div class="sec-hdr">🍦 Helado x Kilo <span class="sec-cnt">${(s.sabores||[]).length} sabores</span></div>
-        <div style="margin-top:6px">`;
+      body += '<div><div class="sec-hdr">🍦 Helado x Kilo <span class="sec-cnt">'+(s.sabores||[]).length+' sabores</span></div><div style="margin-top:6px">';
       if((s.miss_sabores||[]).length===0){
         body += '<div class="ok-line"><span>✓</span> Todos los sabores disponibles</div>';
       } else {
@@ -208,11 +320,8 @@ function render(data){
       }
       body += '</div></div>';
 
-      // Guapaletas
       if((s.miss_guapaletas||[]).length > 0 || (s.guapaletas||[]).length > 0){
-        body += `<div>
-          <div class="sec-hdr">🍡 Guapaletas <span class="sec-cnt">${(s.guapaletas||[]).length} variedades</span></div>
-          <div style="margin-top:6px">`;
+        body += '<div><div class="sec-hdr">🍡 Guapaletas <span class="sec-cnt">'+(s.guapaletas||[]).length+' variedades</span></div><div style="margin-top:6px">';
         if((s.miss_guapaletas||[]).length===0){
           body += '<div class="ok-line"><span>✓</span> Todas disponibles</div>';
         } else {
@@ -223,20 +332,106 @@ function render(data){
     }
 
     const card = document.createElement('div');
-    card.className = cardClass;
-    card.innerHTML = `
-      <div class="card-head">
-        <div class="card-icon ${iconClass}">${iconEmoji}</div>
-        <div>
-          <div class="card-name">${s.nombre}</div>
-          <div class="card-addr">${s.direccion||''}</div>
-        </div>
-      </div>
-      <div class="tags">${tagHtml}</div>
-      ${body}
-    `;
-    grid.appendChild(card);
+    // se construye como string porque innerHTML += en loop de grid es más simple
+    html += '<div class="'+cardClass+'" onclick="selectSuc(\''+s.nombre.replace(/'/g,"\\'")+'\')">'
+      + '<div class="card-head">'
+      + '<div class="card-icon '+st.iconClass+'">'+st.emoji+'</div>'
+      + '<div><div class="card-name">'+s.nombre+'</div><div class="card-addr">'+(s.direccion||'')+'</div></div>'
+      + '</div>'
+      + '<div class="tags">'+st.tagHtml+'</div>'
+      + body
+      + '</div>';
   });
+  html += '</div>';
+
+  document.getElementById('detail').innerHTML = html;
+}
+
+function renderSucDetail(s){
+  const st = statusOf(s);
+  let html = '<div class="back-btn" onclick="selectSuc(\'__overview__\')">&larr; Volver al resumen</div>';
+
+  html += '<div class="detail-head">'
+    + '<div class="detail-icon '+st.iconClass+'">'+st.emoji+'</div>'
+    + '<div><div class="detail-name">'+s.nombre+'</div><div class="detail-addr">'+(s.direccion||'')+'</div>'
+    + '<div class="tags" style="margin-top:8px">'+st.tagHtml+'</div></div>'
+    + '</div>';
+
+  if(s.cerrada){
+    html += '<div class="detail-block"><div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div></div>';
+  } else if(s.sin_datos){
+    html += '<div class="detail-block"><div class="ulist empty-note">Todavía no hay datos relevados para esta sucursal.</div></div>';
+  } else {
+    html += '<div class="detail-block">'
+      + '<div class="detail-block-title">🍦 Helado x Kilo</div>'
+      + '<div class="detail-cols">'
+      + '<div class="d-col"><div class="d-title '+((s.miss_sabores||[]).length?'bad':'')+'">Sabores faltantes ('+(s.miss_sabores||[]).length+')</div>'+ulist(s.miss_sabores,'miss')+'</div>'
+      + '<div class="d-col"><div class="d-title">Sabores disponibles ('+(s.sabores||[]).length+')</div>'+ulist(s.sabores)+'</div>'
+      + '</div></div>';
+
+    html += '<div class="detail-block">'
+      + '<div class="detail-block-title">🍡 Guapaletas</div>'
+      + '<div class="detail-cols">'
+      + '<div class="d-col"><div class="d-title '+((s.miss_guapaletas||[]).length?'bad':'')+'">Faltantes ('+(s.miss_guapaletas||[]).length+')</div>'+ulist(s.miss_guapaletas,'miss')+'</div>'
+      + '<div class="d-col"><div class="d-title">Disponibles ('+(s.guapaletas||[]).length+')</div>'+ulist(s.guapaletas)+'</div>'
+      + '</div></div>';
+  }
+
+  // ── Historial ──
+  html += '<div class="detail-block" id="histBlock">'
+    + '<div class="detail-block-title">💾 Historial guardado</div>'
+    + '<div id="histInner_'+cssSafe(s.nombre)+'"></div>'
+    + '</div>';
+
+  document.getElementById('detail').innerHTML = html;
+  renderHistorial(s);
+}
+
+function cssSafe(nombre){
+  return nombre.replace(/[^a-zA-Z0-9_]/g,'_');
+}
+
+function renderHistorial(s){
+  const cont = document.getElementById('histInner_'+cssSafe(s.nombre));
+  if(!cont) return;
+  const hist = s.historial || [];
+  if(!hist.length){
+    cont.innerHTML = '<div class="hist-empty">Sin historial guardado aún para esta sucursal</div>';
+    return;
+  }
+  if(histSelIdx[s.nombre]===undefined) histSelIdx[s.nombre]=0;
+  const idx = Math.min(histSelIdx[s.nombre], hist.length-1);
+  const entry = hist[idx];
+
+  let datesHtml = '<div class="hist-dates-bar">';
+  hist.forEach((h,i)=>{
+    const dt = new Date(h.ts);
+    const lbl = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})
+              + ' ' + dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    const closedMark = h.cerrada ? ' 🔒' : '';
+    datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+closedMark+'</button>';
+  });
+  datesHtml += '</div>';
+
+  const prod = entry.products || [];
+  const sab  = entry.sabores  || [];
+
+  let snap = '<div class="hist-meta">Snapshot del '+new Date(entry.ts).toLocaleString('es-AR')+' — '+prod.length+' productos · '+sab.length+' sabores</div>';
+  if(entry.cerrada){
+    snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
+  }
+  snap += '<div class="detail-cols">'
+    + '<div class="d-col"><div class="d-title">Productos ('+prod.length+')</div>'+ulist(prod)+'</div>'
+    + '<div class="d-col"><div class="d-title">Sabores ('+sab.length+')</div>'+ulist(sab)+'</div>'
+    + '</div>';
+
+  cont.innerHTML = datesHtml + snap;
+}
+
+function selectHist(nombre, idx){
+  histSelIdx[nombre] = idx;
+  const s = (DATA.sucursales||[]).find(x=>x.nombre===nombre);
+  if(s) renderHistorial(s);
 }
 
 // Carga inicial + auto-refresh cada 10 minutos
