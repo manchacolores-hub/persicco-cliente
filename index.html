@@ -39,7 +39,10 @@
   .li-dot.ok{background:#4ade80}
   .li-dot.gray{background:#4a4a58}
   .closed-tag{font-size:8.5px;font-weight:800;background:rgba(234,179,8,.15);color:#fbbf24;padding:1px 5px;border-radius:5px;flex-shrink:0}
+  .fab-tag{font-size:8.5px;font-weight:800;background:rgba(167,139,250,.15);color:#a78bfa;padding:1px 5px;border-radius:5px;flex-shrink:0}
+  .suc-item.fab-item{background:rgba(167,139,250,.06)}
   .sidebar-divider{height:1px;background:rgba(255,255,255,.07);margin:10px 6px 12px}
+  .fab-banner{background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:10px;padding:10px 14px;color:#c4b5fd;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:16px}
 
   .detail{flex:1;min-width:0;padding:24px 24px 60px}
 
@@ -215,6 +218,7 @@ function missCount(s){
 }
 
 function statusOf(s){
+  if(s.esFabrica) return {iconClass:'ok', emoji:'🏭', tagHtml:'<span class="tag ok" style="background:rgba(167,139,250,.12);color:#a78bfa;border-color:rgba(167,139,250,.25)">🏭 Fábrica (referencia)</span>'};
   if(s.sin_datos) return {iconClass:'nd', emoji:'–', tagHtml:'<span class="tag nd">Sin datos</span>'};
   if(s.cerrada)   return {iconClass:'cerr', emoji:'🔒', tagHtml:'<span class="tag cerr">Cerrada</span>'};
   const m = missCount(s);
@@ -232,9 +236,10 @@ function selectSuc(nombre){
 function renderSidebar(){
   if(!DATA) return;
   const sucs = DATA.sucursales || [];
-  const totalFalt = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
-  const totalOk   = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
-  const totalCerr = sucs.filter(s=>s.cerrada).length;
+  const clientSucs = sucs.filter(s=>!s.esFabrica);
+  const totalFalt = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
+  const totalCerr = clientSucs.filter(s=>s.cerrada).length;
 
   document.getElementById('sidebarSummary').innerHTML =
     (totalFalt>0?'<span class="mini-chip warn">'+totalFalt+' con faltantes</span>':'')
@@ -255,18 +260,23 @@ function renderSidebar(){
   list.appendChild(div);
 
   sucs.forEach(s=>{
-    const st = statusOf(s);
     const m = missCount(s);
     const it = document.createElement('div');
-    it.className = 'suc-item' + (s.nombre===selectedNombre ? ' active' : '');
+    it.className = 'suc-item' + (s.esFabrica ? ' fab-item' : '') + (s.nombre===selectedNombre ? ' active' : '');
     it.onclick = function(){ selectSuc(s.nombre); };
     let right = '';
-    if(s.sin_datos) right = '<span class="li-dot gray" title="Sin datos"></span>';
+    if(s.esFabrica) right = '<span class="fab-tag">FÁBRICA</span>';
+    else if(s.sin_datos) right = '<span class="li-dot gray" title="Sin datos"></span>';
     else if(s.cerrada) right = '<span class="closed-tag">CERRADO</span>';
     else if(m===0) right = '<span class="li-dot ok" title="Todo disponible"></span>';
     else right = '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
-    it.innerHTML = '<span class="li-name">'+s.nombre+'</span>'+right;
+    it.innerHTML = '<span class="li-name">'+(s.esFabrica?'🏭 ':'')+s.nombre+'</span>'+right;
     list.appendChild(it);
+    if(s.esFabrica){
+      const div2 = document.createElement('div');
+      div2.className = 'sidebar-divider';
+      list.appendChild(div2);
+    }
   });
 }
 
@@ -288,15 +298,16 @@ function renderDetail(){
 
 function renderOverview(){
   const sucs = DATA.sucursales || [];
-  const totalFalt = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
-  const totalOk   = sucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
-  const totalCerr = sucs.filter(s=>s.cerrada).length;
+  const clientSucs = sucs.filter(s=>!s.esFabrica);
+  const totalFalt = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
+  const totalCerr = clientSucs.filter(s=>s.cerrada).length;
 
   let html = '<div class="summary-bar">'
     + '<div class="sum-card '+(totalFalt>0?'warn':'ok')+'"><div class="num">'+totalFalt+'</div><div class="lbl">Con faltantes</div></div>'
     + '<div class="sum-card ok"><div class="num">'+totalOk+'</div><div class="lbl">Completas</div></div>'
     + '<div class="sum-card"><div class="num" style="color:#fbbf24">'+totalCerr+'</div><div class="lbl">Cerradas</div></div>'
-    + '<div class="sum-card"><div class="num" style="color:#a78bfa">'+sucs.length+'</div><div class="lbl">Sucursales</div></div>'
+    + '<div class="sum-card"><div class="num" style="color:#a78bfa">'+clientSucs.length+'</div><div class="lbl">Sucursales</div></div>'
     + '</div>';
 
   html += '<div class="grid">';
@@ -309,8 +320,11 @@ function renderOverview(){
     else cardClass += ' all-ok';
 
     let body = '';
+    if(s.esFabrica){
+      body = '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto.</div>';
+    }
     if(s.cerrada){
-      body = '<div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div>';
+      body += '<div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div>';
     } else if(!s.sin_datos){
       body += '<div><div class="sec-hdr">🍦 Helado x Kilo <span class="sec-cnt">'+(s.sabores||[]).length+' sabores</span></div><div style="margin-top:6px">';
       if((s.miss_sabores||[]).length===0){
@@ -357,6 +371,9 @@ function renderSucDetail(s){
     + '<div class="tags" style="margin-top:8px">'+st.tagHtml+'</div></div>'
     + '</div>';
 
+  if(s.esFabrica){
+    html += '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto de las sucursales.</div>';
+  }
   if(s.cerrada){
     html += '<div class="detail-block"><div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div></div>';
   } else if(s.sin_datos){
@@ -409,14 +426,15 @@ function renderHistorial(s){
     const lbl = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})
               + ' ' + dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     const closedMark = h.cerrada ? ' 🔒' : '';
-    datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+closedMark+'</button>';
+    const vMark = h.version ? (' · v'+h.version) : '';
+    datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+vMark+closedMark+'</button>';
   });
   datesHtml += '</div>';
 
   const prod = entry.products || [];
   const sab  = entry.sabores  || [];
 
-  let snap = '<div class="hist-meta">Snapshot del '+new Date(entry.ts).toLocaleString('es-AR')+' — '+prod.length+' productos · '+sab.length+' sabores</div>';
+  let snap = '<div class="hist-meta">Snapshot'+(entry.version?(' v'+entry.version):'')+' del '+new Date(entry.ts).toLocaleString('es-AR')+' — '+prod.length+' productos · '+sab.length+' sabores</div>';
   if(entry.cerrada){
     snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
   }
