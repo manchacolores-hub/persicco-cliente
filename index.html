@@ -130,6 +130,16 @@
   .ulist .it.miss{color:#f87171}
   .ulist.empty-note{color:#4a4a58;font-style:italic;font-size:12px}
 
+  /* ── Círculos de faltantes (resumen visual por sucursal) ── */
+  .miss-circles{display:flex;gap:26px;flex-wrap:wrap;padding:4px 0 6px}
+  .miss-circle-item{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:108px}
+  .miss-circle{width:96px;height:96px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid;line-height:1.1;transition:.2s}
+  .miss-circle .mc-emoji{font-size:18px;margin-bottom:3px}
+  .miss-circle .mc-num{font-size:30px;font-weight:900}
+  .miss-circle.zero{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.35);color:#4ade80}
+  .miss-circle.nonzero{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.4);color:#f87171}
+  .miss-circle-label{font-size:11.5px;font-weight:700;color:#a0a0b0;text-align:center;text-transform:uppercase;letter-spacing:.4px;max-width:120px}
+
   /* Back button */
   .back-btn{display:inline-flex;align-items:center;gap:6px;background:#18181c;border:1px solid rgba(255,255,255,.08);color:#a0a0b0;font-size:12px;font-weight:700;padding:7px 13px;border-radius:9px;cursor:pointer;margin-bottom:16px}
   .back-btn:hover{border-color:rgba(255,255,255,.2);color:#f0f0f3}
@@ -164,6 +174,9 @@
     .send-wrap{width:100%}
     .send-btn{width:100%;justify-content:center}
     .send-menu{left:0;right:0;width:100%}
+    .miss-circles{justify-content:center;gap:18px}
+    .miss-circle{width:84px;height:84px}
+    .miss-circle .mc-num{font-size:26px}
   }
 </style>
 </head>
@@ -402,17 +415,11 @@ function renderSucDetail(s){
     html += '<div class="detail-block"><div class="ulist empty-note">Todavía no hay datos relevados para esta sucursal.</div></div>';
   } else {
     html += '<div class="detail-block">'
-      + '<div class="detail-block-title">🍦 Helado x Kilo</div>'
-      + '<div class="detail-cols">'
-      + '<div class="d-col"><div class="d-title '+((s.miss_sabores||[]).length?'bad':'')+'">Sabores faltantes ('+(s.miss_sabores||[]).length+')</div>'+ulist(s.miss_sabores,'miss')+'</div>'
-      + '<div class="d-col"><div class="d-title">Sabores disponibles ('+(s.sabores||[]).length+')</div>'+ulist(s.sabores)+'</div>'
-      + '</div></div>';
-
-    html += '<div class="detail-block">'
-      + '<div class="detail-block-title">🍡 Guapaletas</div>'
-      + '<div class="detail-cols">'
-      + '<div class="d-col"><div class="d-title '+((s.miss_guapaletas||[]).length?'bad':'')+'">Faltantes ('+(s.miss_guapaletas||[]).length+')</div>'+ulist(s.miss_guapaletas,'miss')+'</div>'
-      + '<div class="d-col"><div class="d-title">Disponibles ('+(s.guapaletas||[]).length+')</div>'+ulist(s.guapaletas)+'</div>'
+      + '<div class="detail-block-title">📊 Faltantes</div>'
+      + '<div class="miss-circles">'
+      + missCircleHtml('🍦', 'Productos / Promociones', (s.miss_helados||[]).length)
+      + missCircleHtml('🍨', 'Sabores', (s.miss_sabores||[]).length)
+      + missCircleHtml('🍡', 'Guapaletas', (s.miss_guapaletas||[]).length)
       + '</div></div>';
   }
 
@@ -428,6 +435,14 @@ function renderSucDetail(s){
 
 function cssSafe(nombre){
   return nombre.replace(/[^a-zA-Z0-9_]/g,'_');
+}
+
+function missCircleHtml(emoji, label, count){
+  const cls = count>0 ? 'nonzero' : 'zero';
+  return '<div class="miss-circle-item">'
+    + '<div class="miss-circle '+cls+'"><div class="mc-emoji">'+emoji+'</div><div class="mc-num">'+count+'</div></div>'
+    + '<div class="miss-circle-label">'+label+'</div>'
+    + '</div>';
 }
 
 // ── Botón "Enviar faltantes" (Email / WhatsApp, según contacto en la ficha) ──
