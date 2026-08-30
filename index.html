@@ -174,6 +174,52 @@
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
 
+
+  /* ── Botón + modal "PEYA CERRADO" ── */
+  .head-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .cierres-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(234,179,8,.08);
+    border:1px solid rgba(234,179,8,.28);color:#fbbf24;font-size:12.5px;font-weight:800;
+    padding:11px 15px;border-radius:11px;cursor:pointer;transition:.16s;white-space:nowrap;
+    letter-spacing:.3px}
+  .cierres-btn:hover{background:rgba(234,179,8,.14);border-color:rgba(234,179,8,.45);transform:translateY(-1px)}
+  .cierres-btn .cb-count{background:rgba(234,179,8,.2);border-radius:999px;padding:1px 7px;font-size:11px}
+
+  .cierres-overlay{position:fixed;inset:0;background:rgba(6,6,8,.72);backdrop-filter:blur(6px);
+    z-index:60;display:none;align-items:center;justify-content:center;padding:20px}
+  .cierres-overlay.open{display:flex}
+  .cierres-modal{background:#1a1a1f;border:1px solid rgba(255,255,255,.09);border-radius:18px;
+    width:100%;max-width:430px;max-height:min(78vh,640px);display:flex;flex-direction:column;
+    box-shadow:0 24px 70px rgba(0,0,0,.6);overflow:hidden;
+    animation:cierresIn .18s cubic-bezier(.2,.8,.3,1)}
+  @keyframes cierresIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .cierres-head{padding:20px 22px 16px;border-bottom:1px solid rgba(255,255,255,.07);
+    display:flex;align-items:flex-start;gap:12px}
+  .cierres-badge{width:40px;height:40px;border-radius:11px;background:rgba(234,179,8,.12);
+    display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+  .cierres-title{font-size:13px;font-weight:900;letter-spacing:1.2px;color:#fbbf24;text-transform:uppercase}
+  .cierres-suc{font-size:16px;font-weight:800;color:#f0f0f3;margin-top:3px;line-height:1.2}
+  .cierres-x{margin-left:auto;background:none;border:none;color:#78788a;font-size:22px;
+    cursor:pointer;line-height:1;padding:2px 4px;border-radius:7px;transition:.14s}
+  .cierres-x:hover{color:#f0f0f3;background:rgba(255,255,255,.07)}
+  .cierres-sub{padding:13px 22px;font-size:12px;color:#a0a0b0;background:rgba(234,179,8,.045);
+    border-bottom:1px solid rgba(255,255,255,.05)}
+  .cierres-sub b{color:#fbbf24;font-weight:800}
+  .cierres-list{overflow-y:auto;padding:8px 12px 14px}
+  .cierres-row{display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:10px;transition:.12s}
+  .cierres-row:hover{background:rgba(255,255,255,.035)}
+  .cierres-dot{width:8px;height:8px;border-radius:50%;background:#eab308;flex-shrink:0;
+    box-shadow:0 0 0 3px rgba(234,179,8,.14)}
+  .cierres-fecha{font-size:13.5px;font-weight:600;color:#f0f0f3}
+  .cierres-rel{font-size:11px;color:#78788a;margin-top:1px}
+  .cierres-hora{margin-left:auto;font-size:12px;font-weight:700;color:#a0a0b0;
+    background:rgba(255,255,255,.05);padding:3px 9px;border-radius:7px;flex-shrink:0}
+  .cierres-foot{padding:12px 22px 16px;font-size:11px;color:#4a4a58;border-top:1px solid rgba(255,255,255,.05);line-height:1.5}
+  .cierres-empty{padding:34px 22px;text-align:center;color:#4a4a58;font-size:13px}
+  @media(max-width:780px){
+    .head-actions{width:100%;flex-direction:column;align-items:stretch}
+    .cierres-btn{justify-content:center}
+  }
+
   /* Mobile */
   @media(max-width:780px){
     .topbar{padding:12px 16px}
@@ -260,13 +306,65 @@ function missCount(s){
   return (s.miss_sabores||[]).length + (s.miss_guapaletas||[]).length + (s.miss_helados||[]).length;
 }
 
+function cierresButtonHtml(s){
+  const n = (s.cierres||[]).length;
+  if(!n) return '';
+  return '<button class="cierres-btn" onclick="openCierres(\''+cssSafe(s.nombre)+'\')" '
+       + 'title="Ver las fechas en que apareci\u00f3 cerrada">&#128274; PEYA CERRADO'
+       + '<span class="cb-count">'+n+'</span></button>';
+}
+
+function fmtFechaCierre(ts){
+  const d = new Date(ts);
+  if(isNaN(d)) return {fecha: String(ts).slice(0,10), hora: '', rel: ''};
+  let fecha = d.toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'});
+  fecha = fecha.charAt(0).toUpperCase() + fecha.slice(1);   // 's\u00e1bado, 29 de agosto' -> 'S\u00e1bado, ...'
+  const hora  = d.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+  const dias  = Math.round((Date.now() - d.getTime()) / 86400000);
+  const rel   = dias <= 0 ? 'hoy' : (dias === 1 ? 'ayer' : 'hace ' + dias + ' d\u00edas');
+  return {fecha, hora, rel};
+}
+
+function openCierres(id){
+  const s = (DATA && DATA.sucursales || []).find(x => cssSafe(x.nombre) === id);
+  if(!s) return;
+  const lista = (s.cierres || []).slice(0, 10);
+  document.getElementById('cierresSuc').textContent = s.nombre;
+  document.getElementById('cierresSub').innerHTML =
+    lista.length === 1 ? 'Registrada como cerrada <b>1 vez</b>.'
+                       : 'Registrada como cerrada <b>' + lista.length + ' veces</b>. '
+                         + 'Se muestran las m\u00e1s recientes.';
+  document.getElementById('cierresList').innerHTML = lista.length
+    ? lista.map(function(ts){
+        const f = fmtFechaCierre(ts);
+        return '<div class="cierres-row"><span class="cierres-dot"></span>'
+             + '<div><div class="cierres-fecha">'+f.fecha+'</div>'
+             + '<div class="cierres-rel">'+f.rel+'</div></div>'
+             + (f.hora ? '<span class="cierres-hora">'+f.hora+'</span>' : '')
+             + '</div>';
+      }).join('')
+    : '<div class="cierres-empty">Todav\u00eda no hay cierres registrados.</div>';
+  document.getElementById('cierresOverlay').classList.add('open');
+}
+
+function closeCierres(){
+  document.getElementById('cierresOverlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeCierres();
+});
+
 function statusOf(s){
-  if(s.esFabrica) return {iconClass:'ok', emoji:'🏭', tagHtml:'<span class="tag ok" style="background:rgba(167,139,250,.12);color:#a78bfa;border-color:rgba(167,139,250,.25)">🏭 Fábrica (referencia)</span>'};
-  if(s.sin_datos) return {iconClass:'nd', emoji:'–', tagHtml:'<span class="tag nd">Sin datos</span>'};
-  if(s.cerrada)   return {iconClass:'cerr', emoji:'🔒', tagHtml:'<span class="tag cerr">Cerrada</span>'};
+  // Abierta/cerrada y faltantes son dos datos independientes: el estado del
+  // local ya no esconde lo que le falta. La fábrica también se mide.
+  const cerrTag = s.cerrada ? '<span class="tag cerr">🔒 Cerrada</span>' : '';
+  const fabTag  = s.esFabrica ? '<span class="tag ok" style="background:rgba(167,139,250,.12);color:#a78bfa;border-color:rgba(167,139,250,.25)">🏭 Fábrica (referencia)</span>' : '';
+  if(s.sin_datos) return {iconClass:'nd', emoji:'–', tagHtml: fabTag+cerrTag+'<span class="tag nd">Sin datos</span>'};
   const m = missCount(s);
-  if(m>0) return {iconClass:'falt', emoji:'!', tagHtml:'<span class="tag falt">'+m+' faltantes</span>'};
-  return {iconClass:'ok', emoji:'✓', tagHtml:'<span class="tag ok">✓ Completa</span>'};
+  const missTag = m>0 ? '<span class="tag falt">'+m+' faltantes</span>'
+                      : '<span class="tag ok">✓ Completa</span>';
+  return {iconClass: m>0?'falt':'ok', emoji: m>0?'!':'✓', tagHtml: fabTag+cerrTag+missTag};
 }
 
 function selectSuc(nombre){
@@ -280,8 +378,8 @@ function renderSidebar(){
   if(!DATA) return;
   const sucs = DATA.sucursales || [];
   const clientSucs = sucs.filter(s=>!s.esFabrica);
-  const totalFalt = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
-  const totalOk   = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
+  const totalFalt = clientSucs.filter(s=>!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = clientSucs.filter(s=>!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = clientSucs.filter(s=>s.cerrada).length;
 
   document.getElementById('sidebarSummary').innerHTML =
@@ -308,11 +406,11 @@ function renderSidebar(){
     it.className = 'suc-item' + (s.esFabrica ? ' fab-item' : '') + (s.nombre===selectedNombre ? ' active' : '');
     it.onclick = function(){ selectSuc(s.nombre); };
     let right = '';
-    if(s.esFabrica) right = '<span class="fab-tag">FÁBRICA</span>';
-    else if(s.sin_datos) right = '<span class="li-dot gray" title="Sin datos"></span>';
-    else if(s.cerrada) right = '<span class="closed-tag">CERRADO</span>';
-    else if(m===0) right = '<span class="li-dot ok" title="Todo disponible"></span>';
-    else right = '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
+    if(s.esFabrica) right += '<span class="fab-tag">FÁBRICA</span>';
+    if(s.cerrada)   right += '<span class="closed-tag">CERRADO</span>';
+    if(s.sin_datos) right += '<span class="li-dot gray" title="Sin datos"></span>';
+    else if(m===0)  right += '<span class="li-dot ok" title="Todo disponible"></span>';
+    else            right += '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
     it.innerHTML = '<span class="li-name">'+(s.esFabrica?'🏭 ':'')+s.nombre+'</span>'+right;
     list.appendChild(it);
     if(s.esFabrica){
@@ -342,8 +440,8 @@ function renderDetail(){
 function renderOverview(){
   const sucs = DATA.sucursales || [];
   const clientSucs = sucs.filter(s=>!s.esFabrica);
-  const totalFalt = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)>0).length;
-  const totalOk   = clientSucs.filter(s=>!s.cerrada&&!s.sin_datos&&missCount(s)===0).length;
+  const totalFalt = clientSucs.filter(s=>!s.sin_datos&&missCount(s)>0).length;
+  const totalOk   = clientSucs.filter(s=>!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = clientSucs.filter(s=>s.cerrada).length;
 
   let html = '<div class="summary-bar">'
@@ -367,8 +465,9 @@ function renderOverview(){
       body = '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto.</div>';
     }
     if(s.cerrada){
-      body += '<div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div>';
-    } else if(!s.sin_datos){
+      body += '<div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos en PedidosYa. Los faltantes de abajo están medidos igual.</div>';
+    }
+    if(!s.sin_datos){
       body += '<div><div class="sec-hdr">🍦 Helado x Kilo <span class="sec-cnt">'+(s.sabores||[]).length+' sabores</span></div><div style="margin-top:6px">';
       if((s.miss_sabores||[]).length===0){
         body += '<div class="ok-line"><span>✓</span> Todos los sabores disponibles</div>';
@@ -414,15 +513,17 @@ function renderSucDetail(s){
     + '<div><div class="detail-name">'+s.nombre+'</div><div class="detail-addr">'+(s.direccion||'')+'</div>'
     + '<div class="tags" style="margin-top:8px">'+st.tagHtml+'</div></div>'
     + '</div>';
-  if(!s.esFabrica) html += sendButtonHtml(s);
+  html += '<div class="head-actions">' + cierresButtonHtml(s)
+        + (s.esFabrica ? '' : sendButtonHtml(s)) + '</div>';
   html += '</div>'; // cierre detail-head-row
 
   if(s.esFabrica){
     html += '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto de las sucursales.</div>';
   }
   if(s.cerrada){
-    html += '<div class="detail-block"><div class="cerr-banner">🔒 Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.</div></div>';
-  } else if(s.sin_datos){
+    html += '<div class="detail-block"><div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos en PedidosYa. Los faltantes de abajo están medidos igual.</div></div>';
+  }
+  if(s.sin_datos){
     html += '<div class="detail-block"><div class="ulist empty-note">Todavía no hay datos relevados para esta sucursal.</div></div>';
   } else {
     const mh = s.miss_helados||[], ms_h = s.miss_sabores||[], mg = s.miss_guapaletas||[];
@@ -434,7 +535,7 @@ function renderSucDetail(s){
       + '<div class="detail-block-title">📊 Faltantes</div>'
       + '<div class="miss-circles">'
       + missCircleHtml('🍦', 'Productos / Promociones', mh.length)
-      + missCircleHtml('🍨', 'Sabores', ms_h.length)
+      + missCircleHtml('🍨', 'Sabores faltantes', ms_h.length)
       + missCircleHtml('🍡', 'Guapaletas', mg.length)
       + '</div>'
       + (missListHtml ? '<div class="miss-details">'+missListHtml+'</div>' : '')
@@ -561,7 +662,7 @@ function buildFaltantesMsg(s){
     return lines.join('\n');
   }
   if(s.cerrada){
-    lines.push('⚠ Sucursal cerrada al momento del último relevamiento. Los datos pueden no estar actualizados.');
+    lines.push('🔒 La sucursal está cerrada en PedidosYa en este momento.');
     lines.push('');
   }
   const ms = s.miss_sabores||[], mg = s.miss_guapaletas||[], mh = s.miss_helados||[];
@@ -658,5 +759,20 @@ function selectHist(nombre, idx){
 loadData();
 setInterval(loadData, 10*60*1000);
 </script>
+<div class="cierres-overlay" id="cierresOverlay" onclick="if(event.target===this)closeCierres()">
+  <div class="cierres-modal" role="dialog" aria-modal="true" aria-labelledby="cierresTitle">
+    <div class="cierres-head">
+      <div class="cierres-badge">&#128274;</div>
+      <div>
+        <div class="cierres-title" id="cierresTitle">PEYA cerrado</div>
+        <div class="cierres-suc" id="cierresSuc"></div>
+      </div>
+      <button class="cierres-x" onclick="closeCierres()" aria-label="Cerrar">&times;</button>
+    </div>
+    <div class="cierres-sub" id="cierresSub"></div>
+    <div class="cierres-list" id="cierresList"></div>
+    <div class="cierres-foot">Fechas en las que PedidosYa mostró la sucursal cerrada al momento del relevamiento. Se guarda un registro por día.</div>
+  </div>
+</div>
 </body>
 </html>
