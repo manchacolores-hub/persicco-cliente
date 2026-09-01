@@ -131,11 +131,14 @@
   .ulist.empty-note{color:#4a4a58;font-style:italic;font-size:12px}
 
   /* ── Círculos de faltantes (resumen visual por sucursal) ── */
-  .miss-circles{display:flex;gap:26px;flex-wrap:wrap;padding:4px 0 6px}
-  .miss-circle-item{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:108px}
+  .miss-circles{display:flex;gap:20px;flex-wrap:wrap;padding:4px 0 6px}
+  .miss-circle-item{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:100px}
   .miss-circle{width:96px;height:96px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:4px solid;line-height:1.1;transition:.2s}
   .miss-circle .mc-emoji{font-size:18px;margin-bottom:3px}
-  .miss-circle .mc-num{font-size:30px;font-weight:900}
+  .miss-circle .mc-num{font-size:28px;font-weight:900}
+  .miss-circle .mc-de{font-size:10px;font-weight:700;opacity:.62;margin-top:-1px;letter-spacing:.3px}
+  .miss-circle .mc-na{font-size:11px;font-weight:800;letter-spacing:.2px}
+  .miss-circle.na{background:rgba(120,120,138,.07);border-color:rgba(120,120,138,.28);color:#78788a}
   .miss-circle.zero{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.35);color:#4ade80}
   .miss-circle.nonzero{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.4);color:#f87171}
   .miss-circle-label{font-size:11.5px;font-weight:700;color:#a0a0b0;text-align:center;text-transform:uppercase;letter-spacing:.4px;max-width:120px}
@@ -303,8 +306,12 @@ async function loadData(){
 }
 
 function missCount(s){
-  return (s.miss_sabores||[]).length + (s.miss_guapaletas||[]).length + (s.miss_helados||[]).length;
+  return (s.miss_sabores||[]).length + (s.miss_guapaletas||[]).length
+       + (s.miss_paletas||[]).length + (s.miss_helados||[]).length;
 }
+// Una sucursal que no vende la línea no tiene faltantes de esa línea: no es que
+// le falte, es que no es su rubro. Se muestra "no vende" en gris, no un cero rojo.
+function vendeLinea(s, k){ return ((k==='g' ? s.guapaletas : s.paletas)||[]).length > 0; }
 
 function cierresButtonHtml(s){
   const n = (s.cierres||[]).length;
@@ -526,17 +533,25 @@ function renderSucDetail(s){
   if(s.sin_datos){
     html += '<div class="detail-block"><div class="ulist empty-note">Todavía no hay datos relevados para esta sucursal.</div></div>';
   } else {
-    const mh = s.miss_helados||[], ms_h = s.miss_sabores||[], mg = s.miss_guapaletas||[];
+    const mh = s.miss_helados||[], ms_h = s.miss_sabores||[],
+          mg = s.miss_guapaletas||[], mp = s.miss_paletas||[];
     let missListHtml = '';
-    if(mh.length) missListHtml += '<div class="miss-list-group"><div class="miss-list-label">🍦 Helados faltantes</div><ul class="miss-list">'+mh.map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul></div>';
-    if(ms_h.length) missListHtml += '<div class="miss-list-group"><div class="miss-list-label">🍨 Sabores faltantes</div><ul class="miss-list">'+ms_h.map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul></div>';
-    if(mg.length) missListHtml += '<div class="miss-list-group"><div class="miss-list-label">🍡 Guapaletas faltantes</div><ul class="miss-list">'+mg.map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul></div>';
+    function grupo(icono, titulo, arr){
+      return arr.length ? '<div class="miss-list-group"><div class="miss-list-label">'+icono+' '+titulo
+           +'</div><ul class="miss-list">'+arr.map(function(n){return '<li>'+n+'</li>';}).join('')+'</ul></div>' : '';
+    }
+    missListHtml += grupo('🍦','Helados faltantes', mh);
+    missListHtml += grupo('🍨','Sabores faltantes', ms_h);
+    missListHtml += grupo('🍡','Guapaletas faltantes', mg);
+    missListHtml += grupo('🍭','Paletas comunes faltantes', mp);
+    const totG = (s.cat_guapaletas||[]).length, totP = (s.cat_paletas||[]).length;
     html += '<div class="detail-block">'
       + '<div class="detail-block-title">📊 Faltantes</div>'
       + '<div class="miss-circles">'
-      + missCircleHtml('🍦', 'Productos / Promociones', mh.length)
-      + missCircleHtml('🍨', 'Sabores faltantes', ms_h.length)
-      + missCircleHtml('🍡', 'Guapaletas', mg.length)
+      + missCircleHtml('🍨', 'Sabores', ms_h.length, (s.sabores||[]).length + ms_h.length)
+      + missCircleHtml('🍡', 'Guapaletas', mg.length, totG, !vendeLinea(s,'g'))
+      + missCircleHtml('🍭', 'Paletas comunes', mp.length, totP, !vendeLinea(s,'p'))
+      + missCircleHtml('🍦', 'Productos / Promos', mh.length)
       + '</div>'
       + (missListHtml ? '<div class="miss-details">'+missListHtml+'</div>' : '')
       + '</div>';
@@ -616,10 +631,18 @@ function cssSafe(nombre){
   return nombre.replace(/[^a-zA-Z0-9_]/g,'_');
 }
 
-function missCircleHtml(emoji, label, count){
+function missCircleHtml(emoji, label, count, total, noVende){
+  if(noVende){
+    return '<div class="miss-circle-item">'
+      + '<div class="miss-circle na"><div class="mc-emoji">'+emoji+'</div><div class="mc-na">no vende</div></div>'
+      + '<div class="miss-circle-label">'+label+'</div></div>';
+  }
   const cls = count>0 ? 'nonzero' : 'zero';
+  const pie = (typeof total === 'number' && total > 0)
+            ? '<div class="mc-de">de '+total+'</div>' : '';
   return '<div class="miss-circle-item">'
-    + '<div class="miss-circle '+cls+'"><div class="mc-emoji">'+emoji+'</div><div class="mc-num">'+count+'</div></div>'
+    + '<div class="miss-circle '+cls+'"><div class="mc-emoji">'+emoji+'</div>'
+    + '<div class="mc-num">'+count+'</div>'+pie+'</div>'
     + '<div class="miss-circle-label">'+label+'</div>'
     + '</div>';
 }
