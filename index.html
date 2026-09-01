@@ -90,6 +90,18 @@
   .ok-line{font-size:12px;color:#4ade80;padding:3px 0;display:flex;align-items:center;gap:5px}
   .ok-line2{font-size:12px;color:#a0a0b0;padding:2px 0}
 
+  /* Mini-filas del resumen */
+  .mini-rows{display:flex;flex-direction:column;gap:1px;margin-top:2px}
+  .mini-row{display:flex;align-items:center;gap:9px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .mini-row:last-child{border-bottom:none}
+  .mini-row .mr-ico{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+  .mini-row .mr-label{font-size:12px;font-weight:600;color:#a0a0b0;flex:1;min-width:0}
+  .mini-row .mr-val{font-size:13.5px;font-weight:800;white-space:nowrap}
+  .mini-row .mr-val.bad{color:#f87171}
+  .mini-row .mr-val.ok{color:#4ade80;font-size:12px;font-weight:700}
+  .mini-row .mr-val.na{color:#4a4a58;font-size:11.5px;font-weight:600;font-style:italic}
+  .mini-row .mr-de{font-size:11px;font-weight:600;color:#78788a;font-style:normal}
+
   /* Banner cerrada */
   .cerr-banner{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:10px 14px;color:#fbbf24;font-size:12px;display:flex;align-items:center;gap:8px}
 
@@ -394,7 +406,7 @@ function selectSuc(nombre){
 function renderSidebar(){
   if(!DATA) return;
   const sucs = DATA.sucursales || [];
-  const clientSucs = sucs.filter(s=>!s.esFabrica);
+  const clientSucs = sucs;   // la fábrica también se mide, así que también cuenta
   const totalFalt = clientSucs.filter(s=>!s.sin_datos&&missCount(s)>0).length;
   const totalOk   = clientSucs.filter(s=>!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = clientSucs.filter(s=>s.cerrada).length;
@@ -456,7 +468,7 @@ function renderDetail(){
 
 function renderOverview(){
   const sucs = DATA.sucursales || [];
-  const clientSucs = sucs.filter(s=>!s.esFabrica);
+  const clientSucs = sucs;   // la fábrica también se mide, así que también cuenta
   const totalFalt = clientSucs.filter(s=>!s.sin_datos&&missCount(s)>0).length;
   const totalOk   = clientSucs.filter(s=>!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = clientSucs.filter(s=>s.cerrada).length;
@@ -477,31 +489,32 @@ function renderOverview(){
     else if(missCount(s)>0) cardClass += ' has-falt';
     else cardClass += ' all-ok';
 
+    // La tarjeta es el RESUMEN: tres números, uno por línea de producto.
+    // El detalle de qué falta está al clickearla — antes la lista roja
+    // desbordaba la tarjeta y el número del encabezado (lo que tiene) se
+    // confundía con la lista de abajo (lo que falta).
+    function miniFila(icono, etiqueta, faltan, total, vende){
+      let val;
+      if(!vende)            val = '<span class="mr-val na">no vende</span>';
+      else if(faltan === 0) val = '<span class="mr-val ok">✓ completo</span>';
+      else                  val = '<span class="mr-val bad">'+faltan+'<span class="mr-de"> de '+total+'</span></span>';
+      return '<div class="mini-row"><span class="mr-ico">'+icono+'</span>'
+           + '<span class="mr-label">'+etiqueta+'</span>'+val+'</div>';
+    }
     let body = '';
     if(s.esFabrica){
-      body = '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto.</div>';
+      body = '<div class="fab-banner">🏭 Sucursal fábrica. Se mide igual que el resto contra el catálogo.</div>';
     }
     if(s.cerrada){
-      body += '<div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos en PedidosYa. Los faltantes de abajo están medidos igual.</div>';
+      body += '<div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos. Los datos están medidos igual.</div>';
     }
     if(!s.sin_datos){
-      body += '<div><div class="sec-hdr">🍦 Helado x Kilo <span class="sec-cnt">'+(s.sabores||[]).length+' sabores</span></div><div style="margin-top:6px">';
-      if((s.miss_sabores||[]).length===0){
-        body += '<div class="ok-line"><span>✓</span> Todos los sabores disponibles</div>';
-      } else {
-        body += '<div class="falt-list">'+s.miss_sabores.map(f=>'<div class="falt-item">'+f+'</div>').join('')+'</div>';
-      }
-      body += '</div></div>';
-
-      if((s.miss_guapaletas||[]).length > 0 || (s.guapaletas||[]).length > 0){
-        body += '<div><div class="sec-hdr">🍡 Guapaletas <span class="sec-cnt">'+(s.guapaletas||[]).length+' variedades</span></div><div style="margin-top:6px">';
-        if((s.miss_guapaletas||[]).length===0){
-          body += '<div class="ok-line"><span>✓</span> Todas disponibles</div>';
-        } else {
-          body += '<div class="falt-list">'+s.miss_guapaletas.map(f=>'<div class="falt-item">'+f+'</div>').join('')+'</div>';
-        }
-        body += '</div></div>';
-      }
+      const nSab = (s.sabores||[]).length + (s.miss_sabores||[]).length;
+      body += '<div class="mini-rows">'
+        + miniFila('🍨','Sabores',          (s.miss_sabores||[]).length,    nSab, true)
+        + miniFila('🍡','Guapaletas',       (s.miss_guapaletas||[]).length, (s.cat_guapaletas||[]).length, vendeLinea(s,'g'))
+        + miniFila('🍭','Paletas comunes',  (s.miss_paletas||[]).length,    (s.cat_paletas||[]).length,    vendeLinea(s,'p'))
+        + '</div>';
     }
 
     const card = document.createElement('div');
