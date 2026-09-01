@@ -164,6 +164,16 @@
   .hist-date-btn:hover{border-color:rgba(255,255,255,.2);color:#f0f0f3}
   .hist-date-btn.active{background:rgba(99,102,241,.16);border-color:rgba(99,102,241,.4);color:#c7c9ff}
   .hist-meta{font-size:11.5px;color:#78788a;margin-bottom:12px}
+  .hist-snap-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:12px 15px;margin-bottom:14px;
+    border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);
+    border-left:3px solid #78788a}
+  .hist-snap-head.actual{border-left-color:#4ade80;background:rgba(34,197,94,.05)}
+  .hist-snap-head .hsh-fecha{font-size:14.5px;font-weight:800;color:#f0f0f3;flex-basis:100%}
+  .hist-snap-head .hsh-sub{font-size:11.5px;color:#78788a}
+  .hist-snap-head .hsh-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.5px;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .hist-snap-head .hsh-tag.ok{background:rgba(34,197,94,.13);color:#4ade80}
+  .hist-snap-head .hsh-tag.old{background:rgba(120,120,138,.14);color:#a0a0b0}
   .hist-empty{color:#4a4a58;font-style:italic;font-size:12.5px;padding:6px 0}
   .hist-cerrada-banner{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.2);border-radius:10px;padding:10px 14px;color:#fbbf24;font-size:12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:14px}
 
@@ -760,13 +770,28 @@ function renderHistorial(s){
   const prod = entry.products || [];
   const sab  = entry.sabores  || [];
 
-  let snap = '<div class="hist-meta">Snapshot'+(entry.version?(' v'+entry.version):'')+' del '+new Date(entry.ts).toLocaleString('es-AR')+' — '+prod.length+' productos · '+sab.length+' sabores</div>';
+  // El snapshot es una FOTO VIEJA. Antes decía "Sabores (18)" a secas, treinta
+  // píxeles abajo del dato de hoy — y se leía como si el sistema se contradijera.
+  const dEnt = new Date(entry.ts);
+  const dias = Math.round((Date.now() - dEnt.getTime()) / 86400000);
+  const cuando = dias <= 0 ? 'hoy' : (dias === 1 ? 'ayer' : 'hace ' + dias + ' días');
+  const esActual = idx === 0;
+  let snap = '<div class="hist-snap-head'+(esActual?' actual':'')+'">'
+    + '<div class="hsh-fecha">' + dEnt.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})
+      .replace(/^./, m=>m.toUpperCase()) + '</div>'
+    + '<div class="hsh-sub">' + dEnt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+      + ' · ' + cuando + (entry.version ? ' · v'+entry.version : '')
+      + ' — ' + prod.length + ' productos · ' + sab.length + ' sabores</div>'
+    + (esActual ? '<span class="hsh-tag ok">último relevamiento</span>'
+                : '<span class="hsh-tag old">foto anterior</span>')
+    + '</div>';
   if(entry.cerrada){
     snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
   }
+  const fechaCorta = dEnt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
   snap += '<div class="detail-cols">'
-    + '<div class="d-col"><div class="d-title">Productos ('+prod.length+')</div>'+ulist(prod)+'</div>'
-    + '<div class="d-col"><div class="d-title">Sabores ('+sab.length+')</div>'+ulist(sab)+'</div>'
+    + '<div class="d-col"><div class="d-title">Productos al '+fechaCorta+' ('+prod.length+')</div>'+ulist(prod)+'</div>'
+    + '<div class="d-col"><div class="d-title">Sabores al '+fechaCorta+' ('+sab.length+')</div>'+ulist(sab)+'</div>'
     + '</div>';
 
   cont.innerHTML = datesHtml + snap;
