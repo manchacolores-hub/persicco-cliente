@@ -499,8 +499,8 @@ function renderOverview(){
     function miniFila(icono, etiqueta, faltan, total, vende){
       let val;
       if(!vende)            val = '<span class="mr-val na">no vende</span>';
-      else if(faltan === 0) val = '<span class="mr-val ok">✓ completo</span>';
-      else                  val = '<span class="mr-val bad">'+faltan+'<span class="mr-de"> de '+total+'</span></span>';
+      else if(faltan === 0) val = '<span class="mr-val ok">'+total+'<span class="mr-de"> de '+total+'</span></span>';
+      else                  val = '<span class="mr-val bad">'+(total-faltan)+'<span class="mr-de"> de '+total+'</span></span>';
       return '<div class="mini-row"><span class="mr-ico">'+icono+'</span>'
            + '<span class="mr-label">'+etiqueta+'</span>'+val+'</div>';
     }
@@ -512,11 +512,13 @@ function renderOverview(){
       body += '<div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos. Los datos están medidos igual.</div>';
     }
     if(!s.sin_datos){
-      const nSab = (s.sabores||[]).length + (s.miss_sabores||[]).length;
+      const nSab  = (s.sabores||[]).length     + (s.miss_sabores||[]).length;
+      const nGuap = (s.guapaletas||[]).length  + (s.miss_guapaletas||[]).length;
+      const nPal  = (s.paletas||[]).length     + (s.miss_paletas||[]).length;
       body += '<div class="mini-rows">'
-        + miniFila('🍨','Sabores',          (s.miss_sabores||[]).length,    nSab, true)
-        + miniFila('🍡','Guapaletas',       (s.miss_guapaletas||[]).length, (s.cat_guapaletas||[]).length, vendeLinea(s,'g'))
-        + miniFila('🍭','Paletas comunes',  (s.miss_paletas||[]).length,    (s.cat_paletas||[]).length,    vendeLinea(s,'p'))
+        + miniFila('🍨','Sabores',          (s.miss_sabores||[]).length,    nSab,  true)
+        + miniFila('🍡','Guapaletas',       (s.miss_guapaletas||[]).length, nGuap, vendeLinea(s,'g'))
+        + miniFila('🍭','Paletas comunes',  (s.miss_paletas||[]).length,    nPal,  vendeLinea(s,'p'))
         + '</div>';
     }
 
@@ -570,9 +572,10 @@ function renderSucDetail(s){
     missListHtml += grupo('🍨','Sabores faltantes', ms_h);
     missListHtml += grupo('🍡','Guapaletas faltantes', mg);
     missListHtml += grupo('🍭','Paletas comunes faltantes', mp);
-    const totG = (s.cat_guapaletas||[]).length, totP = (s.cat_paletas||[]).length;
+    const totG = (s.guapaletas||[]).length + mg.length,
+          totP = (s.paletas||[]).length + mp.length;
     html += '<div class="detail-block">'
-      + '<div class="detail-block-title">📊 Faltantes</div>'
+      + '<div class="detail-block-title">📊 Disponibilidad</div>'
       + '<div class="miss-circles">'
       + missCircleHtml('🍨', 'Sabores', ms_h.length, (s.sabores||[]).length + ms_h.length)
       + missCircleHtml('🍡', 'Guapaletas', mg.length, totG, !vendeLinea(s,'g'))
@@ -664,11 +667,13 @@ function missCircleHtml(emoji, label, count, total, noVende){
       + '<div class="miss-circle-label">'+label+'</div></div>';
   }
   const cls = count>0 ? 'nonzero' : 'zero';
-  const pie = (typeof total === 'number' && total > 0)
-            ? '<div class="mc-de">de '+total+'</div>' : '';
+  const hayTot = (typeof total === 'number' && total > 0);
+  // Se muestra lo DISPONIBLE, no lo que falta: "39 de 41", no "2 de 41".
+  const num = hayTot ? (total - count) : count;
+  const pie = hayTot ? '<div class="mc-de">de '+total+'</div>' : '';
   return '<div class="miss-circle-item">'
     + '<div class="miss-circle '+cls+'"><div class="mc-emoji">'+emoji+'</div>'
-    + '<div class="mc-num">'+count+'</div>'+pie+'</div>'
+    + '<div class="mc-num">'+num+'</div>'+pie+'</div>'
     + '<div class="miss-circle-label">'+label+'</div>'
     + '</div>';
 }
