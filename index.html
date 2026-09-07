@@ -826,7 +826,12 @@ function renderHistorial(s){
           + ', la última el ' + ult.toLocaleDateString('es-AR',{day:'numeric',month:'long'})
           + ' — mismos productos y sabores.</div>';
   }
-  if(entry.sin_cambios){
+  if(entry.sin_lectura){
+    snap += '<div class="hist-cerrada-banner"><span>⚠</span><div><strong>No se pudo leer esta sucursal</strong>'
+          + '<div style="font-weight:400;font-size:12px;opacity:.85;margin-top:2px">'
+          + (entry.motivo ? 'Motivo: '+entry.motivo+'. ' : '')
+          + 'Queda registrado el control, pero sin datos de productos.</div></div></div>';
+  } else if(entry.sin_cambios){
     snap += '<div class="hist-revis">🔁 <strong>Sin cambios</strong> respecto del control anterior — mismos productos y sabores.</div>';
   }
   if(entry.cerrada){
