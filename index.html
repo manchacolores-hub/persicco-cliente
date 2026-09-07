@@ -191,6 +191,9 @@
     text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap}
   .hist-snap-head .hsh-tag.ok{background:#e4edd3;color:#4f6b2a}
   .hist-snap-head .hsh-tag.old{background:#eadfcd;color:#8c7b66}
+  .hist-revis{background:#f4f7ec;border:1px solid #dbe6c8;border-radius:10px;padding:9px 14px;
+    color:#4f6b2a;font-size:12px;margin-bottom:14px;line-height:1.5}
+  .hist-revis strong{font-weight:700}
   .hist-empty{color:#bcae9a;font-style:italic;font-size:12.5px;padding:6px 0}
   .hist-cerrada-banner{background:#faedd6;border:1px solid #f0dcb4;border-radius:10px;padding:10px 14px;color:#8a5d1c;font-size:12px;display:flex;align-items:flex-start;gap:8px;margin-bottom:14px}
 
@@ -810,6 +813,14 @@ function renderHistorial(s){
     + (esActual ? '<span class="hsh-tag ok">último relevamiento</span>'
                 : '<span class="hsh-tag old">foto anterior</span>')
     + '</div>';
+  const revs = (entry.revisiones||[]).filter(function(r){ return (r||'').slice(0,10) > (entry.ts||'').slice(0,10); });
+  if(revs.length){
+    const ult = new Date(revs[revs.length-1]);
+    snap += '<div class="hist-revis">🔁 <strong>Sin cambios desde entonces.</strong> '
+          + 'Se volvió a controlar ' + revs.length + (revs.length===1?' vez':' veces')
+          + ', la última el ' + ult.toLocaleDateString('es-AR',{day:'numeric',month:'long'})
+          + ' — mismos productos y sabores.</div>';
+  }
   if(entry.cerrada){
     snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
   }
