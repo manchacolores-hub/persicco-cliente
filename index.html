@@ -43,6 +43,8 @@
   .li-dot.gray{background:#c9bba6}
   .closed-tag{font-size:8.5px;font-weight:700;background:#faedd6;color:#b07a2e;padding:2px 6px;border-radius:5px;flex-shrink:0}
   .fab-tag{font-size:8.5px;font-weight:700;background:#ece5f7;color:#7a5aa8;padding:2px 6px;border-radius:5px;flex-shrink:0}
+  .ok-tag{font-size:8.5px;font-weight:700;background:#e4edd3;color:#4f6b2a;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px}
+  .nodata-tag{font-size:8.5px;font-weight:700;background:#eadfcd;color:#8c7b66;padding:2px 6px;border-radius:5px;flex-shrink:0;letter-spacing:.3px}
   .suc-item.fab-item{background:rgba(122,90,168,.06)}
   .sidebar-divider{height:1px;background:#e3d5c0;margin:10px 6px 12px}
   .fab-banner{background:#f4f0fa;border:1px solid #ddd2ee;border-radius:10px;padding:10px 14px;color:#6b4d99;font-size:12px;display:flex;align-items:center;gap:8px;margin-bottom:16px}
@@ -413,10 +415,12 @@ function renderSidebar(){
   const totalFalt = clientSucs.filter(s=>!s.sin_datos&&missCount(s)>0).length;
   const totalOk   = clientSucs.filter(s=>!s.sin_datos&&missCount(s)===0).length;
   const totalCerr = clientSucs.filter(s=>s.cerrada).length;
+  const totalSD   = clientSucs.filter(s=>s.sin_datos).length;
 
   document.getElementById('sidebarSummary').innerHTML =
     (totalFalt>0?'<span class="mini-chip warn">'+totalFalt+' con faltantes</span>':'')
     +'<span class="mini-chip ok">'+totalOk+(totalOk===1?' completa':' completas')+'</span>'
+    +(totalSD>0?'<span class="mini-chip neu">'+totalSD+' sin datos</span>':'')
     +(totalCerr>0?'<span class="mini-chip neu">'+totalCerr+(totalCerr===1?' cerrada':' cerradas')+'</span>':'');
 
   const list = document.getElementById('sucList');
@@ -440,8 +444,8 @@ function renderSidebar(){
     let right = '';
     if(s.esFabrica) right += '<span class="fab-tag">FÁBRICA</span>';
     if(s.cerrada)   right += '<span class="closed-tag">CERRADO</span>';
-    if(s.sin_datos) right += '<span class="li-dot gray" title="Sin datos"></span>';
-    else if(m===0)  right += '<span class="li-dot ok" title="Todo disponible"></span>';
+    if(s.sin_datos) right += '<span class="nodata-tag" title="No se pudo leer el menú">SIN DATOS</span>';
+    else if(m===0)  right += '<span class="ok-tag" title="Todo disponible">COMPLETA</span>';
     else            right += '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
     it.innerHTML = '<span class="li-name">'+(s.esFabrica?'🏭 ':'')+s.nombre+'</span>'+right;
     list.appendChild(it);
