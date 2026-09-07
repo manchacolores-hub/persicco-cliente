@@ -180,6 +180,9 @@
   .hist-date-btn{background:#fff;border:1px solid #e3d5c0;color:#6f6252;font-size:11.5px;font-weight:600;padding:6px 11px;border-radius:8px;cursor:pointer;transition:.15s}
   .hist-date-btn:hover{border-color:#c9b696;color:#2b2118}
   .hist-date-btn.active{background:#f7dfcb;border-color:#e0b48c;color:#a3512b}
+  .hist-date-btn.same{color:#a3937d;background:#faf6ef}
+  .hist-date-btn.same.active{background:#f7dfcb;color:#a3512b}
+  .hdb-same{font-weight:800;opacity:.75;margin-left:1px}
   .hist-meta{font-size:11.5px;color:#8c7b66;margin-bottom:12px}
   .hist-snap-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;padding:12px 15px;margin-bottom:14px;
     border-radius:12px;background:#faf6ef;border:1px solid #efe4d3;
@@ -791,7 +794,8 @@ function renderHistorial(s){
               + ' ' + dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
     const closedMark = h.cerrada ? ' 🔒' : '';
     const vMark = h.version ? (' · v'+h.version) : '';
-    datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+vMark+closedMark+'</button>';
+    const sameMark = h.sin_cambios ? ' <span class="hdb-same" title="Sin cambios respecto del anterior">=</span>' : '';
+    datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+(h.sin_cambios?' same':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+vMark+closedMark+sameMark+'</button>';
   });
   datesHtml += '</div>';
 
@@ -813,6 +817,7 @@ function renderHistorial(s){
     + (esActual ? '<span class="hsh-tag ok">último relevamiento</span>'
                 : '<span class="hsh-tag old">foto anterior</span>')
     + '</div>';
+  // Entradas viejas (modo anterior) pueden traer 'revisiones'; se siguen mostrando.
   const revs = (entry.revisiones||[]).filter(function(r){ return (r||'').slice(0,10) > (entry.ts||'').slice(0,10); });
   if(revs.length){
     const ult = new Date(revs[revs.length-1]);
@@ -820,6 +825,9 @@ function renderHistorial(s){
           + 'Se volvió a controlar ' + revs.length + (revs.length===1?' vez':' veces')
           + ', la última el ' + ult.toLocaleDateString('es-AR',{day:'numeric',month:'long'})
           + ' — mismos productos y sabores.</div>';
+  }
+  if(entry.sin_cambios){
+    snap += '<div class="hist-revis">🔁 <strong>Sin cambios</strong> respecto del control anterior — mismos productos y sabores.</div>';
   }
   if(entry.cerrada){
     snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
