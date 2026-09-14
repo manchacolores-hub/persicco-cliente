@@ -625,7 +625,7 @@ function renderSurtidoChart(s){
   // El historial viene del más nuevo al más viejo; para el gráfico lo queremos en orden cronológico.
   const points = [...histAll].reverse().map(h => ({ ts: h.ts, val: (h.sabores||[]).length }));
 
-  const W = 600, H = 150, padL = 20, padR = 20, padT = 26, padB = 10;
+  const W = 600, H = 168, padL = 22, padR = 22, padT = 26, padB = 30;
   const maxVal = Math.max.apply(null, points.map(p=>p.val).concat([1]));
   const n = points.length;
   const stepX = (W - padL - padR) / Math.max(n - 1, 1);
@@ -638,6 +638,8 @@ function renderSurtidoChart(s){
   const pathD = coords.map((c,i)=> (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
   const areaD = pathD + ' L' + coords[coords.length-1].x.toFixed(1) + ',' + (H-padB) + ' L' + coords[0].x.toFixed(1) + ',' + (H-padB) + ' Z';
 
+  // Con muchos puntos las fechas se pisan: se muestra 1 de cada N.
+  const saltoFecha = Math.max(1, Math.ceil(n / 8));
   const dotsHtml = coords.map((c,i)=>{
     const dt = new Date(c.ts);
     const lbl = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
@@ -645,13 +647,17 @@ function renderSurtidoChart(s){
     // celular no se veía nunca. Los extremos se corren para no salirse del SVG.
     const anchor = i===0 ? 'start' : (i===coords.length-1 ? 'end' : 'middle');
     const tx = i===0 ? c.x-6 : (i===coords.length-1 ? c.x+6 : c.x);
+    const fecha = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+    const mostrarFecha = (i % saltoFecha === 0) || i === coords.length-1;
+    const fechaTxt = mostrarFecha
+      ? '<text x="'+tx.toFixed(1)+'" y="'+(H-10)+'" text-anchor="'+anchor+'"'
+        + ' font-size="10.5" fill="#a3937d">'+fecha+'</text>' : '';
     return '<text x="'+tx.toFixed(1)+'" y="'+(c.y-11).toFixed(1)+'" text-anchor="'+anchor+'"'
          + ' font-size="12" font-weight="700" fill="#6f6252">'+c.val+'</text>'
+         + fechaTxt
          + '<circle cx="'+c.x.toFixed(1)+'" cy="'+c.y.toFixed(1)+'" r="4" fill="#ffffff" stroke="url(#surtidoGrad_'+cssSafe(s.nombre)+')" stroke-width="2.5"><title>'+lbl+' — '+c.val+' sabores surtidos</title></circle>';
   }).join('');
 
-  const firstLbl = new Date(coords[0].ts).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-  const lastLbl  = new Date(coords[coords.length-1].ts).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
   const lastVal  = coords[coords.length-1].val;
 
   wrap.innerHTML =
@@ -666,9 +672,7 @@ function renderSurtidoChart(s){
     + dotsHtml
     + '</svg>'
     + '<div class="surtido-chart-foot">'
-    +   '<span>'+firstLbl+'</span>'
-    +   '<span class="surtido-chart-cur">Último: '+lastVal+' sabores surtidos</span>'
-    +   '<span>'+lastLbl+'</span>'
+    +   '<span class="surtido-chart-cur" style="margin:0 auto">Último: '+lastVal+' sabores surtidos</span>'
     + '</div>';
 }
 
