@@ -625,7 +625,7 @@ function renderSurtidoChart(s){
   // El historial viene del más nuevo al más viejo; para el gráfico lo queremos en orden cronológico.
   const points = [...histAll].reverse().map(h => ({ ts: h.ts, val: (h.sabores||[]).length }));
 
-  const W = 600, H = 150, padL = 6, padR = 6, padT = 14, padB = 10;
+  const W = 600, H = 150, padL = 20, padR = 20, padT = 26, padB = 10;
   const maxVal = Math.max.apply(null, points.map(p=>p.val).concat([1]));
   const n = points.length;
   const stepX = (W - padL - padR) / Math.max(n - 1, 1);
@@ -638,10 +638,16 @@ function renderSurtidoChart(s){
   const pathD = coords.map((c,i)=> (i===0?'M':'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
   const areaD = pathD + ' L' + coords[coords.length-1].x.toFixed(1) + ',' + (H-padB) + ' L' + coords[0].x.toFixed(1) + ',' + (H-padB) + ' Z';
 
-  const dotsHtml = coords.map(c=>{
+  const dotsHtml = coords.map((c,i)=>{
     const dt = new Date(c.ts);
     const lbl = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-    return '<circle cx="'+c.x.toFixed(1)+'" cy="'+c.y.toFixed(1)+'" r="4" fill="#ffffff" stroke="url(#surtidoGrad_'+cssSafe(s.nombre)+')" stroke-width="2.5"><title>'+lbl+' — '+c.val+' sabores surtidos</title></circle>';
+    // El valor va ESCRITO sobre el punto: antes solo estaba en el tooltip y en
+    // celular no se veía nunca. Los extremos se corren para no salirse del SVG.
+    const anchor = i===0 ? 'start' : (i===coords.length-1 ? 'end' : 'middle');
+    const tx = i===0 ? c.x-6 : (i===coords.length-1 ? c.x+6 : c.x);
+    return '<text x="'+tx.toFixed(1)+'" y="'+(c.y-11).toFixed(1)+'" text-anchor="'+anchor+'"'
+         + ' font-size="12" font-weight="700" fill="#6f6252">'+c.val+'</text>'
+         + '<circle cx="'+c.x.toFixed(1)+'" cy="'+c.y.toFixed(1)+'" r="4" fill="#ffffff" stroke="url(#surtidoGrad_'+cssSafe(s.nombre)+')" stroke-width="2.5"><title>'+lbl+' — '+c.val+' sabores surtidos</title></circle>';
   }).join('');
 
   const firstLbl = new Date(coords[0].ts).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
@@ -649,7 +655,7 @@ function renderSurtidoChart(s){
   const lastVal  = coords[coords.length-1].val;
 
   wrap.innerHTML =
-    '<svg viewBox="0 0 '+W+' '+H+'" class="surtido-svg" preserveAspectRatio="none">'
+    '<svg viewBox="0 0 '+W+' '+H+'" class="surtido-svg" preserveAspectRatio="xMidYMid meet">'
     + '<defs><linearGradient id="surtidoGrad_'+cssSafe(s.nombre)+'" x1="0" y1="1" x2="0" y2="0">'
     +   '<stop offset="0%" stop-color="#c45a2d"/>'
     +   '<stop offset="55%" stop-color="#d9a441"/>'
