@@ -291,6 +291,42 @@
     .miss-circle{width:84px;height:84px}
     .miss-circle .mc-num{font-size:26px}
   }
+
+  /* ── Recorrido guiado (se enciende desde el dashboard) ── */
+  .tour-veil{position:fixed;inset:0;z-index:900;background:rgba(43,33,24,.55);
+    opacity:0;transition:opacity .25s}
+  .tour-veil.on{opacity:1}
+  .tour-hole{position:fixed;z-index:901;border-radius:14px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(43,33,24,.55),0 0 0 3px #c45a2d,0 8px 34px rgba(0,0,0,.28);
+    transition:all .32s cubic-bezier(.4,0,.2,1)}
+  .tour-pop{position:fixed;z-index:903;width:322px;max-width:calc(100vw - 26px);
+    background:#fff;border:1px solid #e3d5c0;border-radius:14px;padding:17px 18px 15px;
+    box-shadow:0 16px 48px rgba(43,33,24,.3);transition:all .32s cubic-bezier(.4,0,.2,1)}
+  .tour-pop .tp-num{font-size:10px;font-weight:800;letter-spacing:1px;color:#a3512b;
+    text-transform:uppercase;margin-bottom:7px}
+  .tour-pop .tp-tit{font-size:16.5px;font-weight:700;color:#2b2118;line-height:1.25;
+    margin-bottom:6px;letter-spacing:-.2px}
+  .tour-pop .tp-txt{font-size:13.5px;color:#6f6252;line-height:1.55}
+  .tour-pop .tp-pie{display:flex;align-items:center;gap:9px;margin-top:15px;
+    padding-top:13px;border-top:1px solid #f0e7d9}
+  .tour-pop .tp-dots{display:flex;gap:5px;flex:1}
+  .tour-pop .tp-dot{width:6px;height:6px;border-radius:50%;background:#e0d3bd}
+  .tour-pop .tp-dot.act{background:#c45a2d;width:17px;border-radius:3px}
+  .tour-pop .tp-btn{border:none;cursor:pointer;font-family:inherit;font-size:12.5px;
+    font-weight:700;padding:8px 15px;border-radius:9px}
+  .tour-pop .tp-next{background:#c45a2d;color:#fff}
+  .tour-pop .tp-next:hover{background:#a3512b}
+  .tour-pop .tp-prev{background:#f4ede2;color:#6f6252}
+  .tour-pop .tp-x{position:absolute;top:9px;right:10px;background:none;border:none;
+    color:#bcae9a;font-size:21px;line-height:1;cursor:pointer;padding:2px 6px;
+    border-radius:7px;font-family:inherit}
+  .tour-pop .tp-x:hover{color:#2b2118;background:#f4ede2}
+  .tour-btn{position:fixed;right:18px;bottom:18px;z-index:880;background:#c45a2d;
+    color:#fff;border:none;border-radius:24px;padding:11px 18px;font-size:13px;
+    font-weight:700;cursor:pointer;font-family:inherit;
+    box-shadow:0 5px 18px rgba(196,90,45,.4);display:none}
+  .tour-btn.on{display:block}
+  @media(max-width:780px){ .tour-pop{width:calc(100vw - 24px)} }
 </style>
 </head>
 <body>
@@ -358,6 +394,7 @@ async function loadData(){
     renderDetail();
     actualizarPicker();
     plegarSiMovil();
+    TOUR.iniciar();
   } catch(e){
     document.getElementById('detail').innerHTML =
       '<div class="status-msg">❌ No se pudieron cargar los datos.<br><small>'+e.message+'</small></div>';
@@ -920,6 +957,133 @@ function selectHist(nombre, idx){
 // Carga inicial + auto-refresh cada 10 minutos
 loadData();
 setInterval(loadData, 10*60*1000);
+
+// ══════════ Recorrido guiado ══════════
+// Se enciende con el switch del dashboard: viaja como DATA.tour en el JSON.
+var TOUR = (function(){
+  var i=0,P=[],veil=null,hole=null,pop=null;
+  function esMov(){ return window.matchMedia('(max-width:780px)').matches; }
+
+  function abrirLista(){ var sb=document.querySelector('.sidebar');
+    if(sb&&sb.classList.contains('collapsed')&&window.toggleSucList) toggleSucList(); }
+  function cerrarLista(){ var sb=document.querySelector('.sidebar');
+    if(sb&&!sb.classList.contains('collapsed')&&window.toggleSucList) toggleSucList(); }
+  function alResumen(cb){
+    if(selectedNombre!=='__overview__'){ selectSuc('__overview__'); setTimeout(cb,430); } else cb(); }
+  function entrarSuc(cb){
+    var eleg=null;
+    try{ var ss=(DATA&&DATA.sucursales)||[];
+      for(var k=0;k<ss.length;k++){
+        if((ss[k].historial||[]).length>=2 && (ss[k].miss_sabores||[]).length>0){ eleg=ss[k].nombre; break; } }
+      if(!eleg&&ss.length) eleg=ss[0].nombre;
+    }catch(e){}
+    if(eleg){ selectSuc(eleg); setTimeout(cb,560); } else cb();
+  }
+
+  function pasos(){
+    var m=esMov();
+    return [
+      { sel:'#sidebarSummary', tit:'Cómo venimos hoy',
+        txt:'De un vistazo: cuántas sucursales tienen faltantes, cuántas están completas y cuántas cerradas en este momento.',
+        antes:function(cb){ if(m) abrirLista(); alResumen(cb); } },
+      { sel: m?'#sucPicker':'#sucList',
+        tit: m?'Elegir sucursal':'Las sucursales',
+        txt: m?'Tocá acá para cambiar de sucursal. El número al lado de cada una es lo que le falta.'
+              :'Las 11 sucursales con su número de faltantes al lado. Las más urgentes se destacan solas.',
+        antes:function(cb){ if(m) abrirLista(); cb(); } },
+      { sel:'.card', tit:'Las tres líneas',
+        txt:'Cada sucursal muestra sabores, guapaletas y paletas comunes. El número es lo que HAY sobre el total: "39 de 41" son 39 de los 41 sabores.',
+        antes:function(cb){ if(m) cerrarLista(); alResumen(cb); } },
+      { sel:'.miss-circles', tit:'El detalle de una sucursal',
+        txt:'Entrando a una sucursal se ve el detalle por línea y, más abajo, la lista exacta de qué le falta.',
+        antes:function(cb){ entrarSuc(cb); } },
+      { sel:'.surtido-chart-wrap', tit:'Cómo viene en el tiempo',
+        txt:'La evolución del surtido en cada control. Sirve para ver si una sucursal viene mejorando o empeorando, no sólo cómo está hoy.' },
+      { sel:'.send-wrap', tit:'Y se actúa',
+        txt:'Con el contacto de la sucursal cargado, el pedido de faltantes se manda por WhatsApp o mail en un clic.',
+        opcional:true },
+      { sel:'.miss-details', tit:'Qué falta exactamente',
+        txt:'El listado completo, sabor por sabor. Esto es lo que se le pide a la sucursal para reponer.' }
+    ];
+  }
+
+  function cerrar(){
+    [veil,hole,pop].forEach(function(e){ if(e&&e.parentNode) e.parentNode.removeChild(e); });
+    veil=hole=pop=null;
+    var b=document.getElementById('tourBtn'); if(b) b.classList.add('on');
+    try{ localStorage.setItem('persicco_tour_visto','1'); }catch(e){}
+  }
+
+  function pintar(){
+    var pa=P[i], el=document.querySelector(pa.sel);
+    if(!el){ if(i<P.length-1){ i++; return correr(); } return cerrar(); }
+    if(pa.opcional && !el){ if(i<P.length-1){ i++; return correr(); } return cerrar(); }
+    el.scrollIntoView({block:'center',behavior:'smooth'});
+    setTimeout(function(){
+      var r=el.getBoundingClientRect(), pd=8;
+      hole.style.top=(r.top-pd)+'px'; hole.style.left=(r.left-pd)+'px';
+      hole.style.width=(r.width+pd*2)+'px'; hole.style.height=(r.height+pd*2)+'px';
+      pop.innerHTML='<button class="tp-x">&times;</button>'
+        +'<div class="tp-num">Paso '+(i+1)+' de '+P.length+'</div>'
+        +'<div class="tp-tit">'+pa.tit+'</div><div class="tp-txt">'+pa.txt+'</div>'
+        +'<div class="tp-pie"><div class="tp-dots">'
+        +P.map(function(_,k){ return '<span class="tp-dot'+(k===i?' act':'')+'"></span>'; }).join('')
+        +'</div>'+(i>0?'<button class="tp-btn tp-prev">Atrás</button>':'')
+        +'<button class="tp-btn tp-next">'+(i===P.length-1?'Listo':'Siguiente')+'</button></div>';
+      var ph=pop.offsetHeight||210, pw=pop.offsetWidth||322;
+      var top=r.bottom+14, left=r.left;
+      if(top+ph>window.innerHeight-10) top=Math.max(10,r.top-ph-14);
+      if(left+pw>window.innerWidth-10) left=Math.max(10,window.innerWidth-pw-10);
+      if(left<10) left=10;
+      pop.style.top=top+'px'; pop.style.left=left+'px';
+      pop.querySelector('.tp-x').onclick=cerrar;
+      pop.querySelector('.tp-next').onclick=function(){
+        if(i===P.length-1) return cerrar(); i++; correr(); };
+      var pv=pop.querySelector('.tp-prev');
+      if(pv) pv.onclick=function(){ i--; correr(); };
+    },360);
+  }
+  function correr(){ var pa=P[i];
+    if(pa.antes) pa.antes(function(){ podar(); pintar(); });
+    else { podar(); pintar(); }
+  }
+  // Un paso opcional sin destino en pantalla (ej: la sucursal no tiene
+  // contacto cargado) se quita del recorrido para que la numeracion no salte.
+  function podar(){
+    for(var k=P.length-1;k>i;k--){
+      if(P[k].opcional && !document.querySelector(P[k].sel)) P.splice(k,1);
+    }
+  }
+
+  function arrancar(){
+    cerrar(); P=pasos(); i=0;
+    veil=document.createElement('div'); veil.className='tour-veil';
+    hole=document.createElement('div'); hole.className='tour-hole';
+    pop=document.createElement('div');  pop.className='tour-pop';
+    document.body.appendChild(veil); document.body.appendChild(hole); document.body.appendChild(pop);
+    requestAnimationFrame(function(){ veil.classList.add('on'); });
+    veil.onclick=cerrar;
+    var b=document.getElementById('tourBtn'); if(b) b.classList.remove('on');
+    correr();
+  }
+
+  function iniciar(){
+    // se activa si el dashboard lo encendio, o con ?tour=1 para probar
+    var on = (DATA && DATA.tour) || /[?&]tour=1/.test(location.search);
+    if(!on) return;
+    if(!document.getElementById('tourBtn')){
+      var b=document.createElement('button');
+      b.id='tourBtn'; b.className='tour-btn'; b.textContent='▶ Cómo se lee';
+      b.onclick=arrancar; document.body.appendChild(b);
+    }
+    var forzado = /[?&]tour=1/.test(location.search);
+    var visto=false;
+    try{ visto = localStorage.getItem('persicco_tour_visto')==='1'; }catch(e){}
+    if(forzado || !visto){ setTimeout(arrancar, 800); }
+    else { document.getElementById('tourBtn').classList.add('on'); }
+  }
+  return { iniciar: iniciar, arrancar: arrancar };
+})();
 </script>
 <div class="cierres-overlay" id="cierresOverlay" onclick="if(event.target===this)closeCierres()">
   <div class="cierres-modal" role="dialog" aria-modal="true" aria-labelledby="cierresTitle">
