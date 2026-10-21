@@ -362,6 +362,21 @@
 </div>
 
 <script>
+/* Iconos de linea (mismo trazo que el resto de la pagina) */
+const IC_P = {
+  lock:'<rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>',
+  send:'<path d="M21 3 10.5 13.5"/><path d="M21 3l-6.5 18-4-7.5L3 9.5z"/>',
+  mail:'<rect x="3" y="5" width="18" height="14" rx="2.2"/><path d="m3.5 7 8.5 6 8.5-6"/>',
+  chat:'<path d="M20.5 11.8a8.3 8.3 0 0 1-12.2 7.3L3.5 20.5l1.4-4.4A8.3 8.3 0 1 1 20.5 11.8z"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8.5"/><path d="M21 3.5v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 15.5"/><path d="M3 20.5v-5h5"/>',
+  alert:'<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5"/><path d="M12 17.5v.01"/>'
+};
+function ic(n, sz){ sz = sz || 14;
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-2px">'+IC_P[n]+'</svg>';
+}
+</script>
+<script>
 // ══════════════════════════════════════════════════════════════
 // CONFIGURACIÓN — reemplazá GIST_RAW_URL con la URL real
 // después de publicar por primera vez desde el dashboard
@@ -376,7 +391,7 @@ let histSelIdx = {}; // nombre -> índice seleccionado en su historial
 async function loadData(){
   if(GIST_RAW_URL === 'REEMPLAZAR_CON_URL_DEL_GIST'){
     document.getElementById('detail').innerHTML =
-      '<div class="status-msg">⚙️ Falta configurar la URL del Gist en index.html<br><small>Seguí las instrucciones de setup.</small></div>';
+      '<div class="status-msg">'+ic('alert',16)+' Falta configurar la URL del Gist en index.html<br><small>Seguí las instrucciones de setup.</small></div>';
     return;
   }
   try{
@@ -397,7 +412,7 @@ async function loadData(){
     TOUR.iniciar();
   } catch(e){
     document.getElementById('detail').innerHTML =
-      '<div class="status-msg">❌ No se pudieron cargar los datos.<br><small>'+e.message+'</small></div>';
+      '<div class="status-msg">'+ic('alert',16)+' No se pudieron cargar los datos.<br><small>'+e.message+'</small></div>';
   }
 }
 
@@ -413,7 +428,7 @@ function cierresButtonHtml(s){
   const n = (s.cierres||[]).length;
   if(!n) return '';
   return '<button class="cierres-btn" onclick="openCierres(\''+cssSafe(s.nombre)+'\')" '
-       + 'title="Ver las fechas en que apareci\u00f3 cerrada">&#128274; PEYA CERRADO'
+       + 'title="Ver las fechas en que apareci\u00f3 cerrada">'+ic('lock',15)+' PEYA CERRADO'
        + '<span class="cb-count">'+n+'</span></button>';
 }
 
@@ -461,12 +476,12 @@ document.addEventListener('keydown', function(e){
 function statusOf(s){
   // Abierta/cerrada y faltantes son dos datos independientes: el estado del
   // local ya no esconde lo que le falta. La fábrica también se mide.
-  const cerrTag = s.cerrada ? '<span class="tag cerr">🔒 Cerrada</span>' : '';
-  const fabTag  = s.esFabrica ? '<span class="tag ok" style="background:#ece5f7;color:#7a5aa8;border-color:#ddd2ee">🏭 Fábrica (referencia)</span>' : '';
+  const cerrTag = s.cerrada ? '<span class="tag cerr">'+ic('lock',12)+' Cerrada</span>' : '';
+  const fabTag  = s.esFabrica ? '<span class="tag ok" style="background:#ece5f7;color:#7a5aa8;border-color:#ddd2ee"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-2px;margin-right:4px"><path d="M3 20.5V5.5h4.5V13L14 9.5V13l6.5-3.5v11z"/></svg> Fábrica (referencia)</span>' : '';
   if(s.sin_datos) return {iconClass:'nd', emoji:'–', tagHtml: fabTag+cerrTag+'<span class="tag nd">Sin datos</span>'};
   const m = missCount(s);
   const missTag = m>0 ? '<span class="tag falt">'+m+' faltantes</span>'
-                      : '<span class="tag ok">✓ Completa</span>';
+                      : '<span class="tag ok">'+ic('check',12)+' Completa</span>';
   return {iconClass: m>0?'falt':'ok', emoji: m>0?'!':'✓', tagHtml: fabTag+cerrTag+missTag};
 }
 
@@ -545,7 +560,7 @@ function renderSidebar(){
     if(s.sin_datos) right += '<span class="nodata-tag" title="No se pudo leer el menú">SIN DATOS</span>';
     else if(m===0)  right += '<span class="ok-tag" title="Todo disponible">COMPLETA</span>';
     else            right += '<span class="li-badge" title="Faltantes totales">'+m+'</span>';
-    it.innerHTML = '<span class="li-name">'+(s.esFabrica?'🏭 ':'')+s.nombre+'</span>'+right;
+    it.innerHTML = '<span class="li-name">'+(s.esFabrica?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-2px;margin-right:6px"><path d="M3 20.5V5.5h4.5V13L14 9.5V13l6.5-3.5v11z"/></svg>':'')+s.nombre+'</span>'+right;
     list.appendChild(it);
     if(s.esFabrica){
       const div2 = document.createElement('div');
@@ -608,10 +623,10 @@ function renderOverview(){
     }
     let body = '';
     if(s.esFabrica){
-      body = '<div class="fab-banner">🏭 Sucursal fábrica. Se mide igual que el resto contra el catálogo.</div>';
+      body = '<div class="fab-banner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-2px"><path d="M3 20.5V5.5h4.5V13L14 9.5V13l6.5-3.5v11z"/></svg> Sucursal fábrica. Se mide igual que el resto contra el catálogo.</div>';
     }
     if(s.cerrada){
-      body += '<div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos. Los datos están medidos igual.</div>';
+      body += '<div class="cerr-banner">'+ic('lock',15)+' Cerrada ahora — no está tomando pedidos. Los datos están medidos igual.</div>';
     }
     if(!s.sin_datos){
       const nSab  = (s.sabores||[]).length     + (s.miss_sabores||[]).length;
@@ -655,10 +670,10 @@ function renderSucDetail(s){
   html += '</div>'; // cierre detail-head-row
 
   if(s.esFabrica){
-    html += '<div class="fab-banner">🏭 Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto de las sucursales.</div>';
+    html += '<div class="fab-banner"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;vertical-align:-2px"><path d="M3 20.5V5.5h4.5V13L14 9.5V13l6.5-3.5v11z"/></svg> Esta es la sucursal fábrica: se usa como referencia para calcular los faltantes del resto de las sucursales.</div>';
   }
   if(s.cerrada){
-    html += '<div class="detail-block"><div class="cerr-banner">🔒 Cerrada ahora — no está tomando pedidos en PedidosYa. Los faltantes de abajo están medidos igual.</div></div>';
+    html += '<div class="detail-block"><div class="cerr-banner">'+ic('lock',15)+' Cerrada ahora — no está tomando pedidos en PedidosYa. Los faltantes de abajo están medidos igual.</div></div>';
   }
   if(s.sin_datos){
     html += '<div class="detail-block"><div class="ulist empty-note">Todavía no hay datos relevados para esta sucursal.</div></div>';
@@ -797,11 +812,11 @@ function sendButtonHtml(s){
   const emailSub = s.email ? '' : '<span class="send-sub">sin configurar</span>';
   const waSub    = s.whatsapp ? '' : '<span class="send-sub">sin configurar</span>';
   return '<div class="send-wrap">'
-    + '<button class="send-btn" onclick="toggleSendMenu(event,\''+id+'\')">📤 Enviar faltantes</button>'
+    + '<button class="send-btn" onclick="toggleSendMenu(event,\''+id+'\')">'+ic('send',15)+' Enviar faltantes</button>'
     + '<div class="send-menu" id="sendMenu_'+id+'">'
     +   '<div class="send-menu-hint">Enviar a contacto de la sucursal</div>'
-    +   '<div class="send-menu-item'+(s.email?'':' disabled')+'" onclick="sendVia(event,\'email\',\''+esc+'\')">✉️&nbsp; Por Email'+emailSub+'</div>'
-    +   '<div class="send-menu-item'+(s.whatsapp?'':' disabled')+'" onclick="sendVia(event,\'whatsapp\',\''+esc+'\')">💬&nbsp; Por WhatsApp'+waSub+'</div>'
+    +   '<div class="send-menu-item'+(s.email?'':' disabled')+'" onclick="sendVia(event,\'email\',\''+esc+'\')">'+ic('mail',16)+'&nbsp; Por Email'+emailSub+'</div>'
+    +   '<div class="send-menu-item'+(s.whatsapp?'':' disabled')+'" onclick="sendVia(event,\'whatsapp\',\''+esc+'\')">'+ic('chat',16)+'&nbsp; Por WhatsApp'+waSub+'</div>'
     + '</div>'
     + '</div>';
 }
@@ -894,7 +909,7 @@ function renderHistorial(s){
     const dt = new Date(h.ts);
     const lbl = dt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'})
               + ' ' + dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    const closedMark = h.cerrada ? ' 🔒' : '';
+    const closedMark = h.cerrada ? ' '+ic('lock',12) : '';
     const vMark = h.version ? (' · v'+h.version) : '';
     const sameMark = h.sin_cambios ? ' <span class="hdb-same" title="Sin cambios respecto del anterior">=</span>' : '';
     datesHtml += '<button class="hist-date-btn'+(i===idx?' active':'')+(h.sin_cambios?' same':'')+'" onclick="selectHist(\''+s.nombre.replace(/'/g,"\\'")+'\','+i+')">'+lbl+vMark+closedMark+sameMark+'</button>';
@@ -923,21 +938,21 @@ function renderHistorial(s){
   const revs = (entry.revisiones||[]).filter(function(r){ return (r||'').slice(0,10) > (entry.ts||'').slice(0,10); });
   if(revs.length){
     const ult = new Date(revs[revs.length-1]);
-    snap += '<div class="hist-revis">🔁 <strong>Sin cambios desde entonces.</strong> '
+    snap += '<div class="hist-revis">'+ic('refresh',15)+' <strong>Sin cambios desde entonces.</strong> '
           + 'Se volvió a controlar ' + revs.length + (revs.length===1?' vez':' veces')
           + ', la última el ' + ult.toLocaleDateString('es-AR',{day:'numeric',month:'long'})
           + ' — mismos productos y sabores.</div>';
   }
   if(entry.sin_lectura){
-    snap += '<div class="hist-cerrada-banner"><span>⚠</span><div><strong>No se pudo leer esta sucursal</strong>'
+    snap += '<div class="hist-cerrada-banner"><span>'+ic('alert',16)+'</span><div><strong>No se pudo leer esta sucursal</strong>'
           + '<div style="font-weight:400;font-size:12px;opacity:.85;margin-top:2px">'
           + (entry.motivo ? 'Motivo: '+entry.motivo+'. ' : '')
           + 'Queda registrado el control, pero sin datos de productos.</div></div></div>';
   } else if(entry.sin_cambios){
-    snap += '<div class="hist-revis">🔁 <strong>Sin cambios</strong> respecto del control anterior — mismos productos y sabores.</div>';
+    snap += '<div class="hist-revis">'+ic('refresh',15)+' <strong>Sin cambios</strong> respecto del control anterior — mismos productos y sabores.</div>';
   }
   if(entry.cerrada){
-    snap += '<div class="hist-cerrada-banner"><span>🔒</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
+    snap += '<div class="hist-cerrada-banner"><span>'+ic('lock',16)+'</span><div><strong>Sucursal cerrada</strong><div style="font-weight:400;font-size:12px;opacity:.8;margin-top:2px">Este snapshot se guardó cuando la sucursal estaba cerrada.</div></div></div>';
   }
   const fechaCorta = dEnt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
   snap += '<div class="detail-cols">'
@@ -1088,7 +1103,7 @@ var TOUR = (function(){
 <div class="cierres-overlay" id="cierresOverlay" onclick="if(event.target===this)closeCierres()">
   <div class="cierres-modal" role="dialog" aria-modal="true" aria-labelledby="cierresTitle">
     <div class="cierres-head">
-      <div class="cierres-badge">&#128274;</div>
+      <div class="cierres-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg></div>
       <div>
         <div class="cierres-title" id="cierresTitle">PEYA cerrado</div>
         <div class="cierres-suc" id="cierresSuc"></div>
