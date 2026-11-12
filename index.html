@@ -575,6 +575,32 @@ function renderSidebar(){
   });
 }
 
+// Separa los productos de una foto del historial en las mismas lineas que
+// muestra PedidosYa: helados por peso, paletas heladas y el resto (vasito,
+// cucurucho, promos). La foto guarda solo nombres; las paletas se reconocen
+// contra los catalogos y listas de paletas que vienen en los datos publicados.
+function _normNom(n){ return (n||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim(); }
+function setPaletas(){
+  const st = new Set();
+  ((DATA && DATA.sucursales) || []).forEach(function(x){
+    ['guapaletas','paletas','cat_guapaletas','cat_paletas','miss_guapaletas','miss_paletas'].forEach(function(k){
+      (x[k]||[]).forEach(function(n){ st.add(_normNom(n)); });
+    });
+  });
+  return st;
+}
+function separarProductos(prod){
+  const pals = setPaletas();
+  const g = {helado:[], paleta:[], producto:[]};
+  (prod||[]).forEach(function(n){
+    const k = _normNom(n);
+    if(/^helado de/.test(k)) g.helado.push(n);
+    else if(pals.has(k) || /paleta/.test(k)) g.paleta.push(n);
+    else g.producto.push(n);
+  });
+  return g;
+}
+
 function ulist(items, cls){
   if(!items || !items.length) return '<div class="ulist empty-note">— ninguno —</div>';
   return '<div class="ulist">' + items.map(n=>'<div class="it'+(cls?(' '+cls):'')+'">'+n+'</div>').join('') + '</div>';
@@ -961,7 +987,11 @@ function renderHistorial(s){
   }
   const fechaCorta = dEnt.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'});
   snap += '<div class="detail-cols">'
-    + '<div class="d-col"><div class="d-title">Productos al '+fechaCorta+' ('+prod.length+')</div>'+ulist(prod)+'</div>'
+    + (function(){
+        const g = separarProductos(prod);
+        const col = function(t, l){ return '<div class="d-col"><div class="d-title">'+t+' al '+fechaCorta+' ('+l.length+')</div>'+ulist(l)+'</div>'; };
+        return col('Helados', g.helado) + col('Paletas', g.paleta) + col('Productos', g.producto);
+      })()
     + '<div class="d-col"><div class="d-title">Sabores al '+fechaCorta+' ('+sab.length+')</div>'+ulist(sab)+'</div>'
     + '</div>';
 
