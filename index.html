@@ -141,8 +141,15 @@
 
   .detail-block{background:#fff;border:1px solid #efe4d3;border-radius:14px;padding:20px 22px;margin-bottom:16px;box-shadow:0 1px 2px rgba(72,52,32,.04)}
   .detail-block-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:#2b2118}
-  .detail-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+  .detail-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+  @media(max-width:1000px){.detail-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .d-col{min-width:0}
+  .detail-cols .d-col{background:#fcf8f2;border:1px solid #efe4d3;border-top:3px solid #e8dccb;border-radius:12px;padding:12px 14px 10px}
+  .detail-cols .d-col.k-helado{border-top-color:#eab79a}
+  .detail-cols .d-col.k-paleta{border-top-color:#cdbde6}
+  .detail-cols .d-col.k-producto{border-top-color:#e6d3a8}
+  .detail-cols .d-col.k-sabor{border-top-color:#c9dbb0}
+  .detail-cols .ulist .it{border-bottom-color:#f1e7d9}
   .d-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#a3937d;margin-bottom:8px}
   .d-title.bad{color:#c45a2d}
   .ulist{display:flex;flex-direction:column;gap:4px;max-height:240px;overflow-y:auto;padding-right:4px}
@@ -989,10 +996,10 @@ function renderHistorial(s){
   snap += '<div class="detail-cols">'
     + (function(){
         const g = separarProductos(prod);
-        const col = function(t, l){ return '<div class="d-col"><div class="d-title">'+t+' al '+fechaCorta+' ('+l.length+')</div>'+ulist(l)+'</div>'; };
-        return col('Helados', g.helado) + col('Paletas', g.paleta) + col('Productos', g.producto);
+        const col = function(t, l, k){ return '<div class="d-col k-'+k+'"><div class="d-title">'+t+' ('+l.length+')</div>'+ulist(l)+'</div>'; };
+        return col('Helados', g.helado, 'helado') + col('Paletas', g.paleta, 'paleta') + col('Productos', g.producto, 'producto');
       })()
-    + '<div class="d-col"><div class="d-title">Sabores al '+fechaCorta+' ('+sab.length+')</div>'+ulist(sab)+'</div>'
+    + '<div class="d-col k-sabor"><div class="d-title">Sabores ('+sab.length+')</div>'+ulist(sab)+'</div>'
     + '</div>';
 
   cont.innerHTML = datesHtml + snap;
